@@ -36,11 +36,10 @@
 
         <div class="ContentArea">
             <div class="PdfViewer">
-<<<<<<< HEAD
+
                 <iframe src="./naisen.pdf" id="PdfFrame" title="内線一覧PDF"></iframe>
-=======
+
                 <iframe id="PdfFrame" title="内線一覧PDF"></iframe>
->>>>>>> c2a20da4faf312173b3a79a09c2cc9b606e0ac3d
             </div>
         </div>
     </div>
