@@ -1,12 +1,14 @@
-/*
-[style] スタイルの基本設定:
-システム: レイアウト調整およびUIの見やすさ向上のためスタイルを追加
-*/
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
-    font-family: 'Helvetica Neue', sans-serif;
-    background: #f7f7f7;
+    font-family: sans-serif;
+    background-color: #f8f8f8;
+    background-image: linear-gradient(#e0e0e0 1px, transparent 1px),
+                      linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
 .container {
@@ -16,15 +18,16 @@ body {
 
 .sidebar {
     width: 220px;
-    background-color: #e0e0e0;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    background-color: #f2f2f2;
+    border-right: 1px solid #ccc;
+    padding: 20px 10px;
 }
 
 .sidebar a {
     display: block;
-    margin: 10px 0;
-    color: #333;
+    padding: 6px 10px;
+    margin: 4px 0;
+    color: #222;
     text-decoration: none;
     font-size: 14px;
 }
@@ -33,25 +36,26 @@ body {
     flex: 1;
     padding: 20px;
     position: relative;
-    background-color: #fff;
 }
 
 .logout-btn {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: white;
+    padding: 6px 12px;
     border: 1px solid #999;
-    padding: 8px 16px;
+    background-color: #fff;
+    color: #333;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .pdf-viewer {
     margin-top: 60px;
-    width: 100%;
+    border: 1px solid #999;
+    background-color: #fff;
+    width: calc(100% - 40px);
     height: calc(100vh - 120px);
-    border: 1px solid #ccc;
-    background: #fff;
 }
 
 .pdf-viewer iframe {
@@ -59,3 +63,14 @@ body {
     height: 100%;
     border: none;
 }
+
+h2 {
+    font-size: 14px;
+    margin: 0;
+    padding-left: 5px;
+}
+
+.spacer {
+    height: 1.5em; /* 約1行分 */
+}
+
