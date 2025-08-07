@@ -1,0 +1,61 @@
+/*
+[style] スタイルの基本設定:
+システム: レイアウト調整およびUIの見やすさ向上のためスタイルを追加
+*/
+
+body {
+    margin: 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    background: #f7f7f7;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background-color: #e0e0e0;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar a {
+    display: block;
+    margin: 10px 0;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.main {
+    flex: 1;
+    padding: 20px;
+    position: relative;
+    background-color: #fff;
+}
+
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #999;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.pdf-viewer {
+    margin-top: 60px;
+    width: 100%;
+    height: calc(100vh - 120px);
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.pdf-viewer iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
