@@ -1,89 +1,116 @@
-body {
+/* リセット */
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: sans-serif;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', 'ヒラギノ角ゴ ProN W3', sans-serif;
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  background-color: #ffffff;
 }
 
 /* サイドバー */
 .SideBar {
-  width: 200px;
-  background-color: #f2f2f2;
+  width: 220px;
+  background-color: #f0f0f0;
   border-right: 1px solid #ccc;
-  padding: 10px;
+  padding: 16px;
+  overflow-y: auto;
 }
 .SideBarList {
   list-style: none;
-  padding: 0;
-  margin: 0;
 }
 .SideBarList li {
-  margin-bottom: 10px;
   font-size: 14px;
+  margin-bottom: 12px;
+  color: #333;
+  cursor: pointer;
+  padding-left: 4px;
 }
 
-/* メイン領域 */
+/* メインコンテンツ */
 .MainContainer {
   flex-grow: 1;
-  padding: 20px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
 }
+
+/* ヘッダー */
 .HeaderArea {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 .Button {
-  padding: 8px 16px;
-  margin-left: 10px;
   font-size: 14px;
+  padding: 6px 16px;
+  border-radius: 4px;
   border: 1px solid #999;
+  background-color: #ffffff;
   cursor: pointer;
-  background-color: #f9f9f9;
 }
 .ButtonReflect {
-  background-color: #e0e0e0;
+  background-color: #eeeeee;
 }
 .ButtonLogout {
   background-color: #ffffff;
 }
 
-/* 部署セクション */
+/* 部署 */
 .DepartmentSection {
   margin-bottom: 40px;
 }
 .DepartmentTitle {
   font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+/* メンバー行 */
+.MemberCard {
+  display: flex;
+  align-items: center;
   margin-bottom: 12px;
 }
 
-/* メンバーカード */
-.MemberCard {
-  display: flex;
-  margin-bottom: 12px;
-}
+/* 名前 */
 .NameBox {
-  width: 80px;
-  padding: 10px;
+  width: 90px;
+  padding: 10px 0;
   text-align: center;
+  font-weight: bold;
+  border-radius: 6px;
   color: #fff;
 }
 .NameBoxBlue {
-  background-color: #005bac;
+  background-color: #007bff;
 }
 .NameBoxRed {
-  background-color: #c0392b;
+  background-color: #dc3545;
 }
+.NameBoxGreen {
+  background-color: #28a745;
+}
+
+/* 入力欄 */
 .InputArea {
   flex-grow: 1;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-left: 10px;
+  gap: 10px;
+  padding-left: 12px;
 }
 .InputArea input {
-  padding: 6px;
+  flex: 1;
+  padding: 8px;
   font-size: 14px;
   border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 /* レスポンシブ対応 */
@@ -91,15 +118,25 @@ body {
   body {
     flex-direction: column;
   }
+
   .SideBar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #ccc;
   }
-  .HeaderArea {
-    justify-content: center;
+
+  .MainContainer {
+    padding: 16px;
   }
+
   .MemberCard {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .InputArea {
+    flex-direction: column;
+    padding-left: 0;
+    margin-top: 8px;
   }
 }
