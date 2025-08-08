@@ -98,14 +98,13 @@ html, body {
 
 /* PDF表示エリア */
 .PdfViewer {
-    border: 1px solid #ccc;
     height: 100%;
     box-sizing: border-box;
 }
 
 #PdfFrame {
     width: 100%;
-    height: 100%;
+    height: 80vh;
     border: none;
 }
 
