@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>内線一覧</title>
-    <link rel="Stylesheet" href="Naisen-list.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -11,7 +11,7 @@
     <!-- 左メニュー -->
     <div class="Sidebar">
         <div class="MenuBox">
-            <a onclick="LoadFloor('hq8f')">本社(8F)</a>
+            <a href="./main.php" onclick="LoadFloor('hq8f')">本社(8F)</a>
             <a onclick="LoadFloor('hq7f')">本社(7F)</a>
             <a onclick="LoadFloor('hq5f')">本社(5F)</a>
             <a onclick="LoadFloor('tsukuba')">つくばセンター</a>
@@ -24,7 +24,7 @@
 
             <div class="Spacer"></div>
 
-            <a onclick="LoadPdf()">内線一覧</a>
+            <a href="#">内線一覧</a>
         </div>
     </div>
 
