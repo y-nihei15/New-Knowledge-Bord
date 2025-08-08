@@ -1,13 +1,10 @@
 <?php
 function jsonResponse($status, $message, $data = null) {
     header("Content-Type: application/json; charset=UTF-8");
-    $response = [
-        "status" => $status,
-        "message" => $message
-    ];
+    $res = ["status" => $status, "message" => $message];
     if ($status === "success" && $data !== null) {
-        $response["data"] = $data;
+        $res["data"] = $data;
     }
-    echo json_encode($response);
+    echo json_encode($res);
     exit;
 }
