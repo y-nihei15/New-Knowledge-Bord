@@ -15,7 +15,7 @@ include 'db.php';
         <!-- サイドバー -->
         <div class="Sidebar">
             <div class="MenuBox">
-                <a onclick="LoadFloor('hq8f')">本社(8F)</a>
+                <a href="#" onclick="LoadFloor('hq8f')">本社(8F)</a>
                 <a onclick="LoadFloor('hq7f')">本社(7F)</a>
                 <a onclick="LoadFloor('hq5f')">本社(5F)</a>
                 <a onclick="LoadFloor('tsukuba')">つくばセンター</a>
@@ -26,7 +26,7 @@ include 'db.php';
                 <a onclick="LoadFloor('nagoya')">名古屋センター</a>
                 <a onclick="LoadFloor('dispatch')">本社(出向/EBS/契約)</a>
                 <div class="Spacer"></div>
-                <a onclick="LoadPdf()">内線一覧</a>
+                <a href="./Naisen_list.php">内線一覧</a>
             </div>
         </div>
 
