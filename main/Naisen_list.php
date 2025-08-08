@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>内線一覧</title>
-    <link rel="Stylesheet" href="Naisen-list.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
