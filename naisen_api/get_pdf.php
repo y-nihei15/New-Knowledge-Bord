@@ -1,5 +1,5 @@
 <?php
-require_once '../jwt.php';
+/*require_once '../jwt.php';
 
 $headers = getallheaders();
 
@@ -11,7 +11,7 @@ if (!verifyToken($headers)) {
         'message' => 'Unauthorized'
     ]);
     exit;
-}
+}*/
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);

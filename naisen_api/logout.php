@@ -1,8 +1,8 @@
 <?php
-require_once '../core/jwt.php';
+//require_once '../core/jwt.php';
 
 header('Content-Type: application/json');
-$headers = getallheaders();
+/*$headers = getallheaders();
 
 if (!verifyToken($headers)) {
     http_response_code(401);
@@ -11,7 +11,7 @@ if (!verifyToken($headers)) {
         'message' => 'Invalid token'
     ]);
     exit;
-}
+}*/
 
 // トークン無効化処理が必要ならここで実装
 
