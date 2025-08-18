@@ -1,14 +1,12 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../utils/response.php';
-require_once __DIR__ . '/../middleware/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
     http_response_code(405);
     jsonResponse("error", "許可されていないメソッドです");
 }
 
-$authUser = authenticate();
 
 // 受信JSON
 $raw = file_get_contents('php://input');
