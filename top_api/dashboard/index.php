@@ -9,57 +9,124 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $authUser = authenticate();
+$accountId = isset($authUser->account_id) ? (int)$authUser->account_id
+             : (isset($authUser->user_id) ? (int)$authUser->user_id : 0); // 後方互換
+
+// TINYINT(0:未設定,1:出勤,2:欠勤,3:有給) → 表示用ラベル
+function mapStatusLabel(?int $v): string {
+    $map = [0 => "unset", 1 => "present", 2 => "absent", 3 => "leave"];
+    return $map[$v ?? 0] ?? "unset";
+}
 
 try {
     $pdo = getDbConnection();
 
-    // 1) 本人の出勤状態
-    $stmt = $pdo->prepare(
-        "SELECT status, updated_at
-           FROM attendance_status
-          WHERE user_id = :uid
-          LIMIT 1"
-    );
-    $stmt->bindValue(':uid', $authUser->user_id, PDO::PARAM_INT);
-    $stmt->execute();
-    $me = $stmt->fetch(PDO::FETCH_ASSOC);
+    // 1) 本人情報（employee_info を基準に取得）
+    $meSql = "
+        SELECT
+            ei.account_id,
+            ei.name,
+            ei.dept_id,
+            d.name  AS dept_name,
+            ei.location_id,
+            l.name  AS location_name,
+            ei.sort,
+            ei.status,
+            ei.plan,
+            ei.comment,
+            ei.updated_at
+        FROM employee_info ei
+        LEFT JOIN dept_mst d     ON d.id = ei.dept_id
+        LEFT JOIN location_mst l ON l.id = ei.location_id
+        WHERE ei.account_id = :aid
+        LIMIT 1
+    ";
+    $meStmt = $pdo->prepare($meSql);
+    $meStmt->bindValue(':aid', $accountId, PDO::PARAM_INT);
+    $meStmt->execute();
+    $meRow = $meStmt->fetch(PDO::FETCH_ASSOC);
 
-    // 2) 全社員分の出勤状態（ページング）
-    //    ?limit=100&offset=0 で制御（上限ガード付き）
-    $limit  = isset($_GET['limit'])  ? max(1, min( (int)$_GET['limit'], 200)) : 200;
+    $self = null;
+    if ($meRow) {
+        $self = [
+            "account_id"   => (int)$meRow["account_id"],
+            "name"         => $meRow["name"],
+            "dept"         => ["id" => $meRow["dept_id"], "name" => $meRow["dept_name"]],
+            "location"     => ["id" => $meRow["location_id"], "name" => $meRow["location_name"]],
+            "sort"         => (int)$meRow["sort"],
+            "status"       => mapStatusLabel(isset($meRow["status"]) ? (int)$meRow["status"] : null),
+            "plan"         => $meRow["plan"],
+            "comment"      => $meRow["comment"],
+            "updated_at"   => $meRow["updated_at"]
+        ];
+    }
+
+    // 2) 全社員一覧（employee_info + マスタ結合、ページング）
+    $limit  = isset($_GET['limit'])  ? max(1, min((int)$_GET['limit'], 200)) : 200;
     $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
 
-    // 可能なら users に name/department 等の列を用意
-    $sql = "SELECT
-                u.id   AS user_id,
-                u.name AS name,
-                a.status,
-                a.updated_at
-            FROM users u
-            LEFT JOIN attendance_status a
-                   ON a.user_id = u.id
-            ORDER BY u.id ASC
-            LIMIT :limit OFFSET :offset";
+    // 任意フィルタ（必要に応じて利用可）
+    $deptFilter     = isset($_GET['dept_id'])     ? (int)$_GET['dept_id']     : null;
+    $locationFilter = isset($_GET['location_id']) ? (int)$_GET['location_id'] : null;
+    $nameQuery      = isset($_GET['q'])           ? trim((string)$_GET['q'])  : null;
 
-    $listStmt = $pdo->prepare($sql);
+    $where = [];
+    $params = [];
+    if ($deptFilter !== null)     { $where[] = "ei.dept_id = :dept_id";           $params[':dept_id'] = [$deptFilter, PDO::PARAM_INT]; }
+    if ($locationFilter !== null) { $where[] = "ei.location_id = :location_id";   $params[':location_id'] = [$locationFilter, PDO::PARAM_INT]; }
+    if ($nameQuery !== null && $nameQuery !== "") {
+        $where[] = "ei.name LIKE :q";
+        $params[':q'] = ["%{$nameQuery}%", PDO::PARAM_STR];
+    }
+    $whereSql = $where ? ("WHERE " . implode(" AND ", $where)) : "";
+
+    $listSql = "
+        SELECT
+            ei.account_id,
+            ei.name,
+            ei.dept_id,
+            d.name  AS dept_name,
+            ei.location_id,
+            l.name  AS location_name,
+            ei.sort,
+            ei.status,
+            ei.plan,
+            ei.comment,
+            ei.updated_at
+        FROM employee_info ei
+        LEFT JOIN dept_mst d     ON d.id = ei.dept_id
+        LEFT JOIN location_mst l ON l.id = ei.location_id
+        {$whereSql}
+        ORDER BY ei.sort ASC, ei.account_id ASC
+        LIMIT :limit OFFSET :offset
+    ";
+    $listStmt = $pdo->prepare($listSql);
+    foreach ($params as $k => [$v, $type]) {
+        $listStmt->bindValue($k, $v, $type);
+    }
     $listStmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
     $listStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $listStmt->execute();
-    $members = $listStmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $listStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $members = array_map(function($r) {
+        return [
+            "account_id" => (int)$r["account_id"],
+            "name"       => $r["name"],
+            "dept"       => ["id" => $r["dept_id"], "name" => $r["dept_name"]],
+            "location"   => ["id" => $r["location_id"], "name" => $r["location_name"]],
+            "sort"       => (int)$r["sort"],
+            "status"     => mapStatusLabel(isset($r["status"]) ? (int)$r["status"] : null),
+            "plan"       => $r["plan"],
+            "comment"    => $r["comment"],
+            "updated_at" => $r["updated_at"]
+        ];
+    }, $rows);
 
     $data = [
-        "self" => [
-            "user_id"    => (int)$authUser->user_id,
-            "attendance" => $me ? [
-                "status"     => $me['status'],
-                "updated_at" => $me['updated_at']
-            ] : null
-        ],
-        "members" => $members,
-        "paging" => [
-            "limit"  => $limit,
-            "offset" => $offset
-        ]
+        "self"   => $self,
+        "members"=> $members,
+        "paging" => ["limit" => $limit, "offset" => $offset]
     ];
 
     jsonResponse("success", "TOP画面の取得に成功しました", $data);
