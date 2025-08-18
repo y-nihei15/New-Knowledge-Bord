@@ -1,12 +1,11 @@
 <?php
 function getDbConnection() {
-    $host = 'localhost';
-    $dbname = 'your_db';
-    $user = 'your_user';
-    $pass = 'your_pass';
+    $dsn = 'mysql:dbname=attendance_board;host=133.18.236.157';
+    $user = 'root';
+    $password = 'Knowledge88!!';
 
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
+        $pdo = new PDO("dbn=$dsn;charset=utf8mb4", $user, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $pdo;
     } catch (PDOException $e) {
@@ -15,3 +14,6 @@ function getDbConnection() {
         exit;
     }
 }
+
+
+
