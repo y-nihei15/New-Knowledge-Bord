@@ -8,6 +8,6 @@ function jsonResponse($status, $message, $data = null) {
     if ($status === "success" && $data !== null) {
         $response["data"] = $data;
     }
-    echo json_encode($response);
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit;
 }
