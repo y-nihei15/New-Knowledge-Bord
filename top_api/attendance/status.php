@@ -1,34 +1,50 @@
 <?php
-require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../utils/response.php';
-// require_once __DIR__ . '/../config/db.php'; ← DBがまだならコメントアウト
-
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: PATCH");
-header("Access-Control-Allow-Headers: Authorization, Content-Type");
+require_once __DIR__ . '/../middleware/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
     http_response_code(405);
     jsonResponse("error", "許可されていないメソッドです");
 }
 
-$user = authenticate();
+$authUser = authenticate();
 
-$input = json_decode(file_get_contents('php://input'), true);
-if (!isset($input['status'])) {
+// 受信JSON
+$raw = file_get_contents('php://input');
+$input = json_decode($raw, true);
+if (!is_array($input) || !isset($input['status'])) {
     http_response_code(400);
     jsonResponse("error", "リクエストの形式が不正です");
 }
 
 $status = $input['status'];
-$valid = ['present', 'absent', 'leave'];
-if (!in_array($status, $valid)) {
+$validStatuses = ['present', 'absent', 'leave']; // 設計書どおり
+
+if (!in_array($status, $validStatuses, true)) {
     http_response_code(400);
     jsonResponse("error", "Invalid status");
 }
 
-// 本来はDB更新だが、今は仮レスポンス
-// $pdo = getDbConnection();
-// ... SQL省略
+try {
+    $pdo = getDbConnection();
+    $pdo->beginTransaction();
 
-jsonResponse("success", "（仮）ステータス「{$status}」が設定されました");
+    // ユーザーの行がなければINSERT、あればUPDATE（安全なUPSERT）
+    // MySQL 5.7+ なら ON DUPLICATE KEY UPDATE を使用（user_id UNIQUE を想定）
+    $sql = "INSERT INTO attendance_status (user_id, status, updated_at)
+            VALUES (:user_id, :status, NOW())
+            ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':user_id', $authUser->user_id, PDO::PARAM_INT);
+    $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+    $stmt->execute();
+
+    $pdo->commit();
+    jsonResponse("success", "出勤状態を更新しました");
+} catch (Throwable $e) {
+    if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
+    error_log("[ATTENDANCE_STATUS] " . $e->getMessage()); // 内部ログのみ詳細
+    http_response_code(500);
+    jsonResponse("error", "Server Error");
+}
