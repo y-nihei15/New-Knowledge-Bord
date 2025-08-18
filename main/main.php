@@ -1,7 +1,9 @@
 <?php
 // 共通：DB接続 & XSSエスケープ
-require_once __DIR__ . '/../top_api/config/db.php'; // ← 修正（スラッシュ追加）
+require_once __DIR__ . '/../top_api/config/db.php'; 
 function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+if (!file_exists($path)) { die("db.php が見つかりません: " . $path); }
+require_once $path;
 
 $pdo = getDbConnection();
 
@@ -107,8 +109,6 @@ function statusClass($tinyInt){
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <div class="ContentArea"><h1>拠点が見つかりません</h1></div>
         <?php endif; ?>
     </div>
 </div>
