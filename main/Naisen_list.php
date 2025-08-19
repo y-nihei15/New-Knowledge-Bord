@@ -11,20 +11,19 @@
     <!-- 左メニュー -->
     <div class="Sidebar">
         <div class="MenuBox">
-            <a href="./main.php" onclick="LoadFloor('hq8f')">本社(8F)</a>
-            <a onclick="LoadFloor('hq7f')">本社(7F)</a>
-            <a onclick="LoadFloor('hq5f')">本社(5F)</a>
-            <a onclick="LoadFloor('tsukuba')">つくばセンター</a>
-            <a onclick="LoadFloor('narita')">成田センター</a>
-            <a onclick="LoadFloor('sapporo')">札幌センター</a>
-            <a onclick="LoadFloor('koriyama')">郡山センター</a>
-            <a onclick="LoadFloor('suwa')">諏訪センター</a>
-            <a onclick="LoadFloor('nagoya')">名古屋センター</a>
-            <a onclick="LoadFloor('hqEbs')">本社(出向/EBS/契約)</a>
-
+            <!-- location_mst.id に合わせて数字を調整してください -->
+            <a onclick="LoadFloor(1)">本社(8F)</a>
+            <a onclick="LoadFloor(2)">本社(7F)</a>
+            <a onclick="LoadFloor(3)">本社(5F)</a>
+            <a onclick="LoadFloor(4)">つくばセンター</a>
+            <a onclick="LoadFloor(5)">成田センター</a>
+            <a onclick="LoadFloor(6)">札幌センター</a>
+            <a onclick="LoadFloor(7)">郡山センター</a>
+            <a onclick="LoadFloor(8)">諏訪センター</a>
+            <a onclick="LoadFloor(9)">名古屋センター</a>
+            <a onclick="LoadFloor(10)">本社(出向/EBS/契約)</a>
             <div class="Spacer"></div>
-
-            <a href="#">内線一覧</a>
+            <a href="./Naisen_list.php">内線一覧</a>
         </div>
     </div>
 
@@ -45,7 +44,7 @@
     </div>
 </div>
 
-<script>
+<!-- <script>
 const Token = localStorage.getItem('token');
 
 /**
@@ -127,7 +126,7 @@ function Logout() {
         alert('通信エラー: ' + err.message);
     });
 }
-</script>
+</script> -->
 
 </body>
 </html>

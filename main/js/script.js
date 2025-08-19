@@ -34,3 +34,10 @@ function applyStatusStyle(button, status) {
       break;
   }
 }
+
+function LoadFloor(id){
+  // location_id だけを書き換えて遷移（他のクエリがあれば保持）
+  const u = new URL(location.href);
+  u.searchParams.set('location_id', String(id));
+  location.href = u.toString();
+}
