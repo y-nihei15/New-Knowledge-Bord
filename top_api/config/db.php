@@ -1,6 +1,6 @@
 <?php
 function getDbConnection() {
-    $host = '133.18.236.157';
+    $host = '127.0.0.1';
     $port = '3306';
     $dbname = 'attendance_board';
     $user = 'root';
