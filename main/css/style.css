@@ -162,3 +162,54 @@ html, body {
     background-color: #fff;
     box-sizing: border-box;
 }
+
+/* === ログイン画面 === */
+.LoginWrapper{
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 48px;
+}
+
+.LoginPanel{
+  width: 340px;
+  background: #fff;
+  border: 1px solid #9e9e9e;
+  box-sizing: border-box;
+  padding: 28px 26px 32px;
+}
+
+.LoginPanel h1{
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  margin: 4px 0 28px;
+}
+
+.LoginFields .LoginLabel{
+  font-size: 14px;
+  margin: 14px 0 6px;
+}
+
+.LoginText{
+  width: 260px;
+  height: 26px;
+  border: 1px solid #9e9e9e;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  display: block;
+}
+
+.LoginSubmit{
+  width: 260px;
+  height: 34px;
+  margin-top: 18px;
+  border: 1px solid #0a6ed1;
+  background: linear-gradient(#2da3ff, #0a78ff);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.LoginSubmit:active{ transform: translateY(1px); }
