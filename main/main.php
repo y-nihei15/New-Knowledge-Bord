@@ -64,7 +64,7 @@ function statusClass($tinyInt){
     <div class="Sidebar">
         <div class="MenuBox">
             <!-- location_mst.id に合わせて数字を調整してください -->
-            <a href="#" onclick="LoadFloor(1)">本社(8F)</a>
+            <a onclick="LoadFloor(1)">本社(8F)</a>
             <a onclick="LoadFloor(2)">本社(7F)</a>
             <a onclick="LoadFloor(3)">本社(5F)</a>
             <a onclick="LoadFloor(4)">つくばセンター</a>
@@ -89,7 +89,7 @@ function statusClass($tinyInt){
         <?php if ($location): ?>
             <?php foreach ($groups as $deptId => $g): ?>
                 <div class="ContentArea">
-                    <h1><?= e($g['dept_name']) ?>（<?= e($location['name']) ?>）</h1>
+                    <h1><?= e($g['dept_name']) ?></h1>
 
                     <?php foreach ($g['members'] as $m):
                         $st = statusClass($m['status']); ?>
@@ -111,18 +111,28 @@ function statusClass($tinyInt){
     </div>
 </div>
 
-<script src="./js/script.js">
-// URLの location_id を置き換えて再読み込み
-function LoadFloor(id){
-  if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
-  const url = new URL(window.location.href);
-  url.searchParams.set('location_id', id);
-  window.location.href = url.toString();
-}
+<script src="./js/script.js"></script>
+<script>
+// // URLの location_id を置き換えて再読み込み
+// function LoadFloor(id){
+//   if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
+//   const url = new URL(window.location.href);
+//   url.searchParams.set('location_id', id);
+//   window.location.href = url.toString();
+// }
 
 // ダミー：送信・ログアウト（必要に応じて実装）
 // function Reflect(){ /* fetchでAPIにPOST/PATCHする実装に差し替え */ }
 // function Logout(){ /* 実装に合わせて */ }
 </script>
+<script>
+function LoadFloor(id){
+  // location_id だけを書き換えて遷移（他のクエリがあれば保持）
+  const u = new URL(location.href);
+  u.searchParams.set('location_id', String(id));
+  location.href = u.toString();
+}
+</script>
+
 </body>
 </html>
