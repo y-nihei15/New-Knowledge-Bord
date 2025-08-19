@@ -111,7 +111,7 @@ function statusClass($tinyInt){
     </div>
 </div>
 
-<script>
+<script src="./js/script.js">
 // URLの location_id を置き換えて再読み込み
 function LoadFloor(id){
   if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
