@@ -2,8 +2,6 @@
 // 共通：DB接続 & XSSエスケープ
 require_once __DIR__ . '/../top_api/config/db.php'; 
 function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-if (!file_exists($path)) { die("db.php が見つかりません: " . $path); }
-require_once $path;
 
 $pdo = getDbConnection();
 
