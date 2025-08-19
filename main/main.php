@@ -44,9 +44,9 @@ foreach ($rows as $r) {
 // ステータス表現（0未設定/1在席/2欠席/3休暇）
 function statusClass($tinyInt){
     switch ((int)$tinyInt) {
-        case 1: return ['class'=>'blue',/*'label'=>'在席',*/'data'=>1];
-        case 2: return ['class'=>'red',/*'label'=>'欠席',*/'data'=>2];
-        case 3: return ['class'=>'green',/*'label'=>'休暇',*/'data'=>3];
+        case 1: return ['class'=>'blue',/*'label'=>'在席',*/'data'=>0];
+        case 2: return ['class'=>'red',/*'label'=>'欠席',*/'data'=>1];
+        case 3: return ['class'=>'green',/*'label'=>'休暇',*/'data'=>2];
         default:return ['class'=>'red',/*'label'=>'未',*/'data'=>0];
     }
 }
