@@ -113,7 +113,6 @@ function statusClass($tinyInt){
 </div>
 
 <script src="./js/script.js"></script>
-<<<<<<< HEAD
 
 <script>
 // URLの location_id を置き換えて再読み込み
@@ -126,7 +125,6 @@ function LoadFloor(id){
 // ダミー：ログアウト（必要に応じて実装）
 function Logout(){ /* 実装に合わせて */ }
 </script>
-=======
 <!--<script>
 // URLの location_id を置き換えて再読み込み
 function LoadFloor(id){
@@ -140,7 +138,6 @@ function LoadFloor(id){
  function Reflect(){ /* fetchでAPIにPOST/PATCHする実装に差し替え */ }
  function Logout(){ /* 実装に合わせて */ }
 </script> -->
->>>>>>> 01dd3e379d7689e50a77c5ceeb77247d875fefd0
 
 <!--<script>
 // URLの location_id を置き換えて再読み込み
