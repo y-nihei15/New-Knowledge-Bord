@@ -1,6 +1,6 @@
 <?php
 // 共通：DB接続 & XSSエスケープ
-require_once __DIR__ . '/../top_api/config/db.php'; 
+require_once __DIR__ . '/../top_api/config/db.php';   // ← パスを統一
 function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
 $pdo = getDbConnection();
@@ -42,12 +42,13 @@ foreach ($rows as $r) {
 }
 
 // ステータス表現（0未設定/1在席/2欠席/3休暇）
+// ※data 属性の値は 0:present, 1:absent, 2:leave の“0始まり”で保持（既存仕様を維持）
 function statusClass($tinyInt){
     switch ((int)$tinyInt) {
-        case 1: return ['class'=>'blue',/*'label'=>'在席',*/'data'=>0];
-        case 2: return ['class'=>'red',/*'label'=>'欠席',*/'data'=>1];
-        case 3: return ['class'=>'green',/*'label'=>'休暇',*/'data'=>2];
-        default:return ['class'=>'red',/*'label'=>'未',*/'data'=>0];
+        case 1: return ['class'=>'blue',  'data'=>0]; // present
+        case 2: return ['class'=>'red',   'data'=>1]; // absent
+        case 3: return ['class'=>'green', 'data'=>2]; // leave
+        default:return ['class'=>'red',   'data'=>0]; // 未/デフォルト→present相当で送る
     }
 }
 ?>
@@ -112,6 +113,35 @@ function statusClass($tinyInt){
 </div>
 
 <script src="./js/script.js"></script>
+<<<<<<< HEAD
+
+<script>
+// URLの location_id を置き換えて再読み込み
+function LoadFloor(id){
+  const u = new URL(location.href);
+  u.searchParams.set('location_id', String(id));
+  location.href = u.toString();
+}
+
+// ダミー：ログアウト（必要に応じて実装）
+function Logout(){ /* 実装に合わせて */ }
+</script>
+=======
+<!--<script>
+// URLの location_id を置き換えて再読み込み
+function LoadFloor(id){
+   if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
+   const url = new URL(window.location.href);
+   url.searchParams.set('location_id', id);
+   window.location.href = url.toString();
+ }
+
+// ダミー：送信・ログアウト（必要に応じて実装）
+ function Reflect(){ /* fetchでAPIにPOST/PATCHする実装に差し替え */ }
+ function Logout(){ /* 実装に合わせて */ }
+</script> -->
+>>>>>>> 01dd3e379d7689e50a77c5ceeb77247d875fefd0
+
 <!--<script>
 // URLの location_id を置き換えて再読み込み
 function LoadFloor(id){
@@ -126,5 +156,55 @@ function LoadFloor(id){
  function Logout(){ /* 実装に合わせて */ }
 </script> -->
 
+
+<!-- ここから：Reflect 実装（/attendance_update.php を叩く） -->
+<script>
+// data-status(0/1/2) → API仕様の文字列へ
+function statusCodeToStr(n){
+  const v = parseInt(n, 10);
+  if (v === 0) return 'present';
+  if (v === 1) return 'absent';
+  if (v === 2) return 'leave';
+  // 念のため1始まり(1/2/3)も受容
+  if (v === 1) return 'absent';
+  if (v === 3) return 'leave';
+  return 'present';
+}
+
+// 一括反映：画面全件を収集して POST
+async function Reflect(){
+  const items = [];
+  document.querySelectorAll('.UserRow').forEach(row => {
+    const btn = row.querySelector('.Statusbutton');
+    const inputs = row.querySelectorAll('input');
+    const planVal    = (inputs[0]?.value ?? '').trim();
+    const commentVal = (inputs[1]?.value ?? '').trim();
+
+    items.push({
+      account_id: parseInt(btn.dataset.accountId, 10),
+      status: statusCodeToStr(btn.dataset.status), // present/absent/leave
+      plan:    planVal === '' ? '' : planVal,      // 空文字→API側でNULL
+      comment: commentVal === '' ? '' : commentVal
+    });
+  });
+
+  try {
+    const res  = await fetch('../top_api/attendance/attendance_update.php', {
+      method : 'POST',
+      headers: {'Content-Type':'application/json'},
+      body   : JSON.stringify({items})
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      alert('更新しました');
+    } else {
+      alert('更新に失敗: ' + (data.message ?? 'unknown error'));
+    }
+  } catch (e){
+    console.error(e);
+    alert('通信エラーが発生しました');
+  }
+}
+</script>
 </body>
 </html>
