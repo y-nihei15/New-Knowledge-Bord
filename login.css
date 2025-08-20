@@ -1,0 +1,114 @@
+/* --- ベース（グレー背景に中央配置） --- */
+* { box-sizing: border-box; }
+:root {
+  --bg: #e6e6e6;
+  --text: #222;
+  --muted: #333;
+  --card: #ffffff;
+  --border: #1f1f1f;         /* 黒に近い枠線 */
+  --input-bg: #f5f5f5;
+  --input-border: #9e9e9e;
+  --primary: #0b76ff;        /* ボタンの青 */
+  --primary-border: #095ed1; /* ボタンの濃い枠 */
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+}
+
+/* --- カード（白背景＋黒枠。角は立てる） --- */
+.card {
+  width: 460px;                      /* 見本の比率に近い固定幅 */
+  background: var(--card);
+  border: 1px solid var(--border);   /* くっきり黒枠 */
+  border-radius: 2px;
+  box-shadow: none;                   /* 影は消す */
+  padding: 26px 60px 24px;
+}
+
+/* --- タイトル（中央・やや小さめ） --- */
+.title {
+  text-align: center;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  margin: 35px 0 35px;
+}
+
+/* --- フォームの横幅を絞って中央に --- */
+.form-narrow {
+  width: 300px;        /* 入力欄をカードより細く */
+  margin: 0 auto;
+}
+
+/* --- ラベル --- */
+label {
+  display: block;
+  font-size: 20px;
+  color: var(--muted);
+  margin: 16px 0 6px;
+}
+
+/* --- 入力欄（淡いグレー背景＋濃い目の境界） --- */
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  height: 40px;
+  padding: 6px 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  outline: none;
+  font-size: 16px;
+}
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: #6aa8ff;   /* ほんの少しだけ色を付ける */
+  background: #fff;
+}
+
+/* --- ボタン（フラットな青：白字＋濃い枠） --- */
+.btn {
+  display: block;
+  width: 100%;
+  height: 50px;
+  margin: 60px 0 50px;
+  border: 1px solid var(--primary-border);
+  background: var(--primary);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(0.97); }
+.btn:active { transform: translateY(1px); }
+
+/* --- 補助表示 --- */
+.errors {
+  width: 100%;
+  margin: 0 auto 10px;
+  padding: 8px 10px;
+  border: 1px solid #ffb3b3;
+  background: #fff2f2;
+  color: #b50000;
+  border-radius: 2px;
+  font-size: 13px;
+}
+.footer {
+  margin-top: 12px;
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+}
+.logout {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 14px;
+}
+
