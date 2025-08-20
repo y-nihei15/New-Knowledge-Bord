@@ -35,9 +35,23 @@ function applyStatusStyle(button, status) {
   }
 }
 
-function LoadFloor(id){
-  // location_id だけを書き換えて遷移（他のクエリがあれば保持）
-  const u = new URL(location.href);
-  u.searchParams.set('location_id', String(id));
-  location.href = u.toString();
+
+function LoadFloor(locationId){
+  const url = new URL('main.php', location.href); // ← base を現在ページに
+  url.search = '';                                // 既存クエリ消す
+  url.searchParams.set('location_id', String(locationId));
+  location.assign(url.toString());
 }
+
+
+
+// // /js/app.js などに配置（関数名=PascalCase禁止なら camelCase に）
+// function LoadFloor(floorId, locationId){
+//   const p = new URLSearchParams();
+//   p.set('floor_id', String(floorId));
+//   if (locationId != null) p.set('location_id', String(locationId));
+//   location.href = './Naisen_list.php?' + p.toString();
+// }
+// function LoadLocation(locationId){
+//   location.href = './Naisen_list.php?location_id=' + encodeURIComponent(locationId);
+// }

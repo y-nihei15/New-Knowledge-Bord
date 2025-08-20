@@ -1,3 +1,10 @@
+<?php
+require_once __DIR__ . '/../top_api/config/db.php';
+function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+
+$pdo = getDbConnection();
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -43,6 +50,8 @@
         </div>
     </div>
 </div>
+
+<script src="./js/script.js"></script>
 
 <!-- <script>
 const Token = localStorage.getItem('token');

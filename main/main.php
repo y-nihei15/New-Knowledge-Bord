@@ -112,27 +112,19 @@ function statusClass($tinyInt){
 </div>
 
 <script src="./js/script.js"></script>
-<script>
-// // URLの location_id を置き換えて再読み込み
-// function LoadFloor(id){
-//   if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
-//   const url = new URL(window.location.href);
-//   url.searchParams.set('location_id', id);
-//   window.location.href = url.toString();
-// }
+<!--<script>
+// URLの location_id を置き換えて再読み込み
+function LoadFloor(id){
+   if(!Number.isInteger(id)){ alert('location_id が不正です'); return; }
+   const url = new URL(window.location.href);
+   url.searchParams.set('location_id', id);
+   window.location.href = url.toString();
+ }
 
 // ダミー：送信・ログアウト（必要に応じて実装）
-// function Reflect(){ /* fetchでAPIにPOST/PATCHする実装に差し替え */ }
-// function Logout(){ /* 実装に合わせて */ }
-</script>
-<script>
-function LoadFloor(id){
-  // location_id だけを書き換えて遷移（他のクエリがあれば保持）
-  const u = new URL(location.href);
-  u.searchParams.set('location_id', String(id));
-  location.href = u.toString();
-}
-</script>
+ function Reflect(){ /* fetchでAPIにPOST/PATCHする実装に差し替え */ }
+ function Logout(){ /* 実装に合わせて */ }
+</script> -->
 
 </body>
 </html>
