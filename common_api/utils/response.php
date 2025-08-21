@@ -11,3 +11,4 @@ function jsonResponse($status, $message, $data = null) {
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit;
 }
+?>

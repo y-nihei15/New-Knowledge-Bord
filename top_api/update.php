@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../../common_api/config/db.php';
 
 // 共通JSONレスポンス
 function jsonResponse(string $status, ?string $message = null, $data = null): void {

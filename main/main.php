@@ -1,6 +1,6 @@
 <?php
 // 共通：DB接続 & XSSエスケープ
-require_once __DIR__ . '/../top_api/config/db.php';   // ← パスを統一
+require_once __DIR__ . '/../common_api/config/db.php';   // ← パスを統一
 function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
 $pdo = getDbConnection();
@@ -48,7 +48,7 @@ function statusClass($tinyInt){
         case 1: return ['class'=>'blue',  'data'=>0]; // present
         case 2: return ['class'=>'red',   'data'=>1]; // absent
         case 3: return ['class'=>'green', 'data'=>2]; // leave
-        default:return ['class'=>'red',   'data'=>0]; // 未/デフォルト→present相当で送る
+        default:return ['class'=>'red',   'data'=>1]; // 未/デフォルト→present相当で送る
     }
 }
 ?>
@@ -186,7 +186,7 @@ async function Reflect(){
   });
 
   try {
-    const res  = await fetch('../top_api/attendance/attendance_update.php', {
+    const res  = await fetch('../top_api/attendance/update.php', {
       method : 'POST',
       headers: {'Content-Type':'application/json'},
       body   : JSON.stringify({items})
