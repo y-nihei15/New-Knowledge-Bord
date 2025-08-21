@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ja">
 <head>
@@ -13,7 +12,7 @@
     <section class="LoginPanel">
       <h1>社内出欠管理</h1>
 
-      <form class="LoginFields" method="post" action="" autocomplete="on">
+      <form class="LoginFields" method="post" action="./main.php" autocomplete="on">
         <p class="LoginLabel">ユーザーID</p>
         <input class="LoginText" type="text" name="userId" required autocomplete="username">
 
