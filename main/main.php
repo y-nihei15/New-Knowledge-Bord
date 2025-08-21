@@ -186,7 +186,7 @@ async function Reflect(){
   });
 
   try {
-    const res  = await fetch('../top_api/attendance/update.php', {
+    const res  = await fetch('../top_api/update.php', {
       method : 'POST',
       headers: {'Content-Type':'application/json'},
       body   : JSON.stringify({items})

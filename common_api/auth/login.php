@@ -15,29 +15,24 @@ if ($id === '' || $pw === '') {
 }
 
 try {
+    // user_id をログインIDとして使う想定
     $stmt = $pdo->prepare(
-        'SELECT id AS login_id, user_id, account_name, role, password_hash, status
+        'SELECT account_id, user_id, password, user_type, user_role
            FROM users
-          WHERE login_id = :id
+          WHERE user_id = :id
           LIMIT 1'
     );
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
 
-    // ユーザーが存在してアクティブで、パスワード一致ならログイン成功
-    // if ($row && ($row['status'] ?? '') === 'active' && password_verify($pw, $row['password_hash'])) {
-    //     header('Location: ../../main/main.php');
-    //     exit;
-    // }
+    // ユーザーが存在し、パスワードが一致すればログイン成功
+    if ($row && password_verify($pw, $row['password'])) {
+        // 成功したら main.php へリダイレクト
+        header('Location: ../../main/main.php');
+        exit;
+    }
 
-    
-    if ($row && ($row['status'] ?? '') === 'active' && $pw === $row['password_hash']) {
-    header('Location: ../../main/main.php');
-    exit;
-}
-
-
-    // 失敗時
+    // 失敗した場合
     exit('ログイン失敗');
 
 } catch (Throwable $e) {
