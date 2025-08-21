@@ -1,59 +1,64 @@
 <?php
 require_once __DIR__ . '/../top_api/config/db.php';
-function e($v){ return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function e($v)
+{
+    return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
 
 $pdo = getDbConnection();
 ?>
 
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="NaisenBody">
+
 <head>
     <meta charset="UTF-8">
     <title>内線一覧</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
 
-<div class="Container">
-    <!-- 左メニュー -->
-    <div class="Sidebar">
-        <div class="MenuBox">
-            <!-- location_mst.id に合わせて数字を調整してください -->
-            <a onclick="LoadFloor(1)">本社(8F)</a>
-            <a onclick="LoadFloor(2)">本社(7F)</a>
-            <a onclick="LoadFloor(3)">本社(5F)</a>
-            <a onclick="LoadFloor(4)">つくばセンター</a>
-            <a onclick="LoadFloor(5)">成田センター</a>
-            <a onclick="LoadFloor(6)">札幌センター</a>
-            <a onclick="LoadFloor(7)">郡山センター</a>
-            <a onclick="LoadFloor(8)">諏訪センター</a>
-            <a onclick="LoadFloor(9)">名古屋センター</a>
-            <a onclick="LoadFloor(10)">本社(出向/EBS/契約)</a>
-            <div class="Spacer"></div>
-            <a href="./Naisen_list.php">内線一覧</a>
-        </div>
-    </div>
+<body class="NaisenBody">
 
-    <!-- メインコンテンツ -->
-    <div class="MainContent">
-        <div class="Logout">
-            <button onclick="Logout()">ログアウト</button>
+    <div class="Container">
+        <!-- 左メニュー -->
+        <div class="Sidebar">
+            <div class="MenuBox">
+                <!-- location_mst.id に合わせて数字を調整してください -->
+                <a onclick="LoadFloor(1)">本社(8F)</a>
+                <a onclick="LoadFloor(2)">本社(7F)</a>
+                <a onclick="LoadFloor(3)">本社(5F)</a>
+                <a onclick="LoadFloor(4)">つくばセンター</a>
+                <a onclick="LoadFloor(5)">成田センター</a>
+                <a onclick="LoadFloor(6)">札幌センター</a>
+                <a onclick="LoadFloor(7)">郡山センター</a>
+                <a onclick="LoadFloor(8)">諏訪センター</a>
+                <a onclick="LoadFloor(9)">名古屋センター</a>
+                <a onclick="LoadFloor(10)">本社(出向/EBS/契約)</a>
+                <div class="Spacer"></div>
+                <a href="./Naisen_list.php">内線一覧</a>
+            </div>
         </div>
 
-        <div class="ContentArea">
-            <div class="PdfViewer">
+        <!-- メインコンテンツ -->
+        <div class="MainContent">
+            <div class="Logout">
+                <button onclick="Logout()">ログアウト</button>
+            </div>
 
-                <iframe src="./naisen.pdf" id="PdfFrame" title="内線一覧PDF"></iframe>
+            <div class="ContentArea">
+                <div class="PdfViewer">
 
-                <iframe id="PdfFrame" title="内線一覧PDF"></iframe>
+                    <iframe src="./naisen.pdf" id="PdfFrame" title="内線一覧PDF"></iframe>
+
+                    <iframe id="PdfFrame" title="内線一覧PDF"></iframe>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="./js/script.js"></script>
+    <script src="./js/script.js"></script>
 
-<!-- <script>
+    <!-- <script>
 const Token = localStorage.getItem('token');
 
 /**
@@ -138,4 +143,5 @@ function Logout() {
 </script> -->
 
 </body>
+
 </html>

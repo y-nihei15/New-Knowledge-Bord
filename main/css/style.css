@@ -6,6 +6,10 @@ html, body {
     background-color: #e6e6e6;
 }
 
+.NaisenBody{
+    overflow: hidden;
+}
+
 /* === レイアウト全体 === */
 .Container {
     display: flex;
