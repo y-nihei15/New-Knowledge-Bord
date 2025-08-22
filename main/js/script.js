@@ -43,6 +43,25 @@ function LoadFloor(locationId){
   location.assign(url.toString());
 }
 
+async function Logout(){
+  try {
+    const res = await fetch('../common_api/auth/logout.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      alert('ログアウトしました');
+      window.location.href = '../main/loginScreen.php'; // ログイン画面に遷移
+    } else {
+      alert('ログアウトに失敗しました: ' + (data.message ?? 'unknown error'));
+    }
+  } catch (err) {
+    console.error(err);
+    alert('通信エラーが発生しました');
+  }
+}
 
 
 // // /js/app.js などに配置（関数名=PascalCase禁止なら camelCase に）

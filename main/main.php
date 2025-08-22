@@ -121,9 +121,6 @@ function LoadFloor(id){
   u.searchParams.set('location_id', String(id));
   location.href = u.toString();
 }
-
-// ダミー：ログアウト（必要に応じて実装）
-function Logout(){ /* 実装に合わせて */ }
 </script>
 <!--<script>
 // URLの location_id を置き換えて再読み込み
