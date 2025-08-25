@@ -1,42 +1,81 @@
 <?php
-// login.php
 declare(strict_types=1);
-require_once __DIR__ . '/config/db.php';  // $pdo を利用可能にする
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    exit('Method Not Allowed');
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Authorization, Content-Type');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+
+// プリフライトリクエスト対応
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // 直アクセス時はログイン画面に飛ばす
+    header('Location: ../../main/loginScreen.php');
+    exit;
 }
 
-// フォームから受け取る
-$userId = $_POST['id'] ?? '';
-$pw     = $_POST['password'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok'=>false,'error'=>'Method Not Allowed']);
+    exit;
+}
 
-if ($userId === '' || $pw === '') {
-    exit('IDとパスワードを入力してください');
+
+// POST以外は許可しない
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok'=>false,'error'=>'Method Not Allowed']);
+    exit;
+}
+
+require_once __DIR__ . '/../jwt/token_issue.php'; // issue_token() を定義
+require_once __DIR__ . '/../config/db.php';       // getDbConnection() を定義
+
+// フォーム送信で受け取る
+$accountId = $_POST['account_id'] ?? '';
+$password  = $_POST['password'] ?? '';
+
+// 未入力チェック
+if ($accountId === '' || $password === '') {
+    http_response_code(400);
+    echo json_encode(['ok'=>false,'error'=>'IDとパスワードを入力してください']);
+    exit;
 }
 
 try {
-    // users テーブルから user_id をキーに検索
-    $stmt = $pdo->prepare(
-        'SELECT account_id, user_id, password, user_type, user_role
-           FROM users
-          WHERE user_id = :user_id
-          LIMIT 1'
-    );
-    $stmt->execute([':user_id' => $userId]);
-    $row = $stmt->fetch();
+    $pdo = getDbConnection();
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ユーザーが存在し、パスワードが一致したらログイン成功
-    if ($row && password_verify($pw, $row['password'])) {
-        // 成功したら main.php へリダイレクト
-        header('Location: ../../main/main.php');
+    // DB検索
+    $stmt = $pdo->prepare('SELECT account_id, password FROM login_info WHERE account_id = :id LIMIT 1');
+    $stmt->execute([':id' => (int)$accountId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+        http_response_code(401);
+        echo json_encode(['ok'=>false,'error'=>'ユーザー未存在']);
         exit;
     }
 
-    // 認証失敗
-    exit('ログイン失敗');
+    // パスワード検証（DBが password_hash() 済み前提）
+    if (!password_verify($password, $row['password'])) {
+        http_response_code(401);
+        echo json_encode(['ok'=>false,'error'=>'パスワード不一致']);
+        exit;
+    }
+
+    // JWT発行
+    $result = issue_token((int)$row['account_id']);
+
+    echo json_encode([
+        'ok'    => true,
+        'token' => $result['token'],
+        'exp'   => $result['exp']
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 
 } catch (Throwable $e) {
-    error_log('[auth] error: ' . $e->getMessage());
-    exit('システムエラー');
+    error_log('[auth/login] '.$e->getMessage());
+    http_response_code(500);
+    echo json_encode(['ok'=>false,'error'=>'システムエラー']);
+    exit;
 }

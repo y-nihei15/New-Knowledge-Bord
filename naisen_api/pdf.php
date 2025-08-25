@@ -1,4 +1,13 @@
 <?php
+declare(strict_types=1);
+
+require_once __DIR__.'/../common_api/config/db.php';
+require_once __DIR__.'/../common_api/jwt/require_auth.php';
+header('Content-Type: application/json; charset=utf-8');
+
+$auth = require_auth();            // ← Authorization: Bearer 必須（401で弾く）
+$pdo  = getDbConnection();
+
 /*require_once '../jwt.php';
 
 $headers = getallheaders();
