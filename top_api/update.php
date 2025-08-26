@@ -1,4 +1,5 @@
 <?php
+// 「２」API：plan/comment を全角=2/半角=1 換算150以内で検証する版
 declare(strict_types=1);
  
 require_once __DIR__.'/../common_api/config/db.php';
