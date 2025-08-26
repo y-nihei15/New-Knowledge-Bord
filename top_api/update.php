@@ -1,18 +1,17 @@
 <?php
-// 「２」API：plan/comment を全角=2/半角=1 換算150以内で検証する版
 declare(strict_types=1);
- 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 require_once __DIR__.'/../common_api/config/db.php';
 require_once __DIR__.'/../common_api/jwt/require_auth.php';
+
 header('Content-Type: application/json; charset=utf-8');
- 
-$auth = require_auth();            // ← Authorization: Bearer 必須（401で弾く）
+
+$auth = require_auth(); // JWTチェック
 $pdo  = getDbConnection();
- 
- 
-// 「２」API：plan/comment を全角=2/半角=1 換算150以内で検証する版
-declare(strict_types=1);
-require_once __DIR__ . '/../config/db.php';
+
 
 // 共通JSONレスポンス
 function jsonResponse(string $status, ?string $message = null, $data = null): void {
@@ -223,9 +222,13 @@ try {
     }
     jsonResponse('success', 'updated', $r0['data']);
   }
-
 } catch (Throwable $e) {
-  error_log('[ATTENDANCE_UPDATE] '.$e->getMessage());
   http_response_code(500);
-  jsonResponse('error', 'Server Error');
+  jsonResponse('error', 'Server Error: '.$e->getMessage());
 }
+
+// } catch (Throwable $e) {
+//   error_log('[ATTENDANCE_UPDATE] '.$e->getMessage());
+//   http_response_code(500);
+//   jsonResponse('error', 'Server Error');
+// }

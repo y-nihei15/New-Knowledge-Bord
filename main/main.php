@@ -122,11 +122,7 @@ function statusClass(int $tinyInt)
 
     <!-- メイン画面 -->
     <div class="MainContent" id="MainContent">
-      <!-- JSでAPIからデータを埋め込む領域 -->
-      <div id="content">
-        <p>データを読み込み中...</p>
-      </div>
-
+      
       <div class="Logout">
         <button onclick="Reflect()">反映</button>
         <button onclick="Logout()">ログアウト</button>
@@ -201,26 +197,6 @@ function statusClass(int $tinyInt)
       u.searchParams.set('location_id', String(n));
       location.href = u.toString();
     }
-
-    /* ===== ステータス見た目クラス同期（1:blue, 2:red, 3:green） ===== */
-    function applyStatusClass(btn, n) {
-      btn.classList.remove('blue', 'red', 'green');
-      if (n === 1) btn.classList.add('blue');
-      else if (n === 2) btn.classList.add('red');
-      else btn.classList.add('green');
-    }
-
-    /* ===== クリックでトグル（1->2->3->1） ===== */
-    document.addEventListener('click', (ev) => {
-      const btn = ev.target.closest?.('.Statusbutton');
-      if (!btn) return;
-
-      let v = Number.parseInt(btn.dataset.status ?? '1', 10);
-      if (!Number.isFinite(v) || v < 1 || v > 3) v = 1;
-      v = (v % 3) + 1;
-      btn.dataset.status = String(v);
-      applyStatusClass(btn, v);
-    });
 
     /* ===== 全角=2 / 半角=1 の換算で150以内に丸める（コメント・行先） ===== */
     function isHalfWidthAscii(ch) {
@@ -333,63 +309,8 @@ function statusClass(int $tinyInt)
         clearTimeout(to);
       }
     }
-
-    /* ===== 一括反映：差分のみ送信 ===== */
-    async function Reflect() {
-      const items = [];
-      document.querySelectorAll('.UserRow').forEach(row => {
-        const it = buildDiffItem(row);
-        if (it) items.push(it);
-      });
-      if (!items.length) {
-        alert('変更がありません');
-        return;
-      }
-      try {
-        const data = await postJSON(API_ENDPOINT, {
-          items
-        });
-        const results = data?.data?.results ?? [];
-        if (results.length) {
-          const changed = results.filter(r => r.ok && r.changed).length;
-          const failed = results.filter(r => !r.ok).length;
-          if (failed > 0) {
-            alert(`一部失敗：変更 ${changed} 件 / 失敗 ${failed} 件`);
-          } else if (changed > 0) {
-            alert(`更新しました（変更 ${changed} 件）`);
-            // 成功後：orig を最新に同期
-            document.querySelectorAll('.UserRow').forEach(row => {
-              const btn = row.querySelector('.Statusbutton');
-              if (btn) btn.dataset.origStatus = btn.dataset.status ?? '1';
-              const inputs = row.querySelectorAll('.UserDetails input');
-              if (inputs[0]) {
-                const v = inputs[0].value.trim();
-                inputs[0].dataset.orig = v;
-                inputs[0].dataset.origNull = (v === '' ? '1' : '0');
-              }
-              if (inputs[1]) {
-                const v = inputs[1].value.trim();
-                inputs[1].dataset.orig = v;
-                inputs[1].dataset.origNull = (v === '' ? '1' : '0');
-              }
-            });
-          } else {
-            alert('保存済みの内容と同一でした（変更なし）');
-          }
-        } else {
-          const c = data?.data?.changed ? 1 : 0;
-          alert(c ? '更新しました（1件）' : '保存済みの内容と同一でした（変更なし）');
-        }
-      } catch (err) {
-        console.error('通信エラー詳細:', err);
-        alert('通信エラー: ' + (err?.message ?? '不明なエラー'));
-      }
-    }
-
-    /* ===== ダミー：ログアウト ===== */
-    function Logout() {
-      /* 実装に合わせて */ }
   </script>
+
   <script src="./js/script.js"></script>
   <script>
     // 1) トークンを取り出す
