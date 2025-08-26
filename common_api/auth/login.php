@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -15,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['ok'=>false,'error'=>'Method Not Allowed']);
+    echo json_encode(['ok' => false, 'error' => 'Method Not Allowed']);
     exit;
 }
 
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // POST以外は許可しない
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['ok'=>false,'error'=>'Method Not Allowed']);
+    echo json_encode(['ok' => false, 'error' => 'Method Not Allowed']);
     exit;
 }
 
@@ -37,14 +38,13 @@ $password  = $_POST['password'] ?? '';
 // 未入力チェック
 if ($accountId === '' || $password === '') {
     http_response_code(400);
-    echo json_encode(['ok'=>false,'error'=>'IDとパスワードを入力してください']);
+    echo json_encode(['ok' => false, 'error' => 'IDとパスワードを入力してください']);
     exit;
 }
 
 try {
     $pdo = getDbConnection();
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
     // DB検索
     $stmt = $pdo->prepare('SELECT account_id, password FROM login_info WHERE account_id = :id LIMIT 1');
     $stmt->execute([':id' => (int)$accountId]);
@@ -52,14 +52,34 @@ try {
 
     if (!$row) {
         http_response_code(401);
-        echo json_encode(['ok'=>false,'error'=>'ユーザー未存在']);
+        echo json_encode(['ok' => false, 'error' => 'ユーザー未存在']);
         exit;
     }
 
-    // パスワード検証（DBが password_hash() 済み前提）
-    if (!password_verify($password, $row['password'])) {
+    $stored = $row['password'];
+    $ok = false;
+
+    // bcrypt形式なら password_verify
+    if (preg_match('/^\$2y\$[0-9]{2}\$/', $stored)) {
+        $ok = password_verify($password, $stored);
+    } else {
+        // 平文保存の場合
+        if ($password === $stored) {
+            $ok = true;
+
+            // 成功したので bcrypt で更新しておく
+            $newHash = password_hash($password, PASSWORD_BCRYPT);
+            $upd = $pdo->prepare('UPDATE login_info SET password = :new WHERE account_id = :id');
+            $upd->execute([
+                ':new' => $newHash,
+                ':id'  => (int)$row['account_id']
+            ]);
+        }
+    }
+
+    if (!$ok) {
         http_response_code(401);
-        echo json_encode(['ok'=>false,'error'=>'パスワード不一致']);
+        echo json_encode(['ok' => false, 'error' => 'パスワード不一致']);
         exit;
     }
 
@@ -72,10 +92,9 @@ try {
         'exp'   => $result['exp']
     ], JSON_UNESCAPED_UNICODE);
     exit;
-
 } catch (Throwable $e) {
-    error_log('[auth/login] '.$e->getMessage());
+    error_log('[auth/login] ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok'=>false,'error'=>'システムエラー']);
+    echo json_encode(['ok' => false, 'error' => 'システムエラー']);
     exit;
 }

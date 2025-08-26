@@ -1,4 +1,15 @@
 // ===== 共通のPOST(JSON)関数 =====
+console.log("script.js 読み込まれた！");
+
+const token = sessionStorage.getItem("access_token");
+console.log("token=", token);
+
+if (!token) {
+  alert("ログインしてください");
+  window.location.href = "../main/loginScreen.php";
+}
+
+
 async function postJSON(url, body) {
   const token = sessionStorage.getItem('access_token');
   const res = await fetch(url, {

@@ -23,4 +23,14 @@ if (!function_exists('json_no_store')) {
   }
 }
 
-?>
+/**
+ * 401 Unauthorized 応答用のヘルパー
+ */
+if (!function_exists('unauthorized')) {
+  function unauthorized(string $msg = 'Unauthorized'): void {
+    http_response_code(401);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => $msg], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+}

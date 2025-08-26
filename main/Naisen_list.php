@@ -1,5 +1,8 @@
 <?php
+declare(strict_types=1);
+
 require_once __DIR__ . '/../common_api/config/db.php';
+
 function e($v)
 {
     return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
