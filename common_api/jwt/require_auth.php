@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../utils/response.php';
-
+require_once __DIR__ . '/jwt_service.php';
 
 /**
  * JWT 認証必須チェック
@@ -13,6 +13,8 @@ require_once __DIR__ . '/../utils/response.php';
  * @return array 認証済みユーザー情報
  */
 function require_auth(bool $redirectIfMissing = false): array {
+    // var_dump($_SERVER['HTTP_AUTHORIZATION']);exit;
+
     $cfg = require __DIR__ . '/jwt_config.php';
     $pdo = getDbConnection();
 

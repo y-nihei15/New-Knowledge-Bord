@@ -1,13 +1,38 @@
 // ===== 共通のPOST(JSON)関数 =====
-console.log("script.js 読み込まれた！");
+(() => {
+  const token = sessionStorage.getItem("access_token");
+  console.log("token check:", token);
+  if (!token) {
+    alert("ログインしてください");
+    window.location.href = "../main/loginScreen.php";
+  }
+})();
 
-const token = sessionStorage.getItem("access_token");
-console.log("token=", token);
+// async function postJSON(url, body) {
+//   const token = sessionStorage.getItem("access_token");
+//   const res = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       "Authorization": `Bearer ${token}`
+//     },
+//     body: JSON.stringify(body)
+//   });
 
-if (!token) {
-  alert("ログインしてください");
-  window.location.href = "../main/loginScreen.php";
-}
+//   const text = await res.text();
+//   alert("サーバーレスポンス:\n" + text.substring(0, 500)); // 先頭500文字だけアラート表示
+//   console.log("サーバーレスポンス全文:", text);
+
+//   if (!res.ok) {
+//     throw new Error(`HTTP ${res.status}`);
+//   }
+
+//   try {
+//     return JSON.parse(text);
+//   } catch (e) {
+//     throw new Error("サーバーがJSONを返しませんでした");
+//   }
+// }
 
 
 async function postJSON(url, body) {

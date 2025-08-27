@@ -12,3 +12,6 @@ RewriteRule ^\.well-known/jwks\.json$ jwt/jwks.php [L]
 
 # Authorization ヘッダを PHP に渡す
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

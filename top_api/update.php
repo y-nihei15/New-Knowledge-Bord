@@ -1,27 +1,29 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 
 require_once __DIR__.'/../common_api/config/db.php';
 require_once __DIR__.'/../common_api/jwt/require_auth.php';
+require_once __DIR__.'/../common_api/utils/response.php'; // ← ここで共通のjsonResponseを読む
 
 header('Content-Type: application/json; charset=utf-8');
 
-$auth = require_auth(); // JWTチェック
+$auth = require_auth(); // Authorization: Bearer 必須
 $pdo  = getDbConnection();
 
-
 // 共通JSONレスポンス
-function jsonResponse(string $status, ?string $message = null, $data = null): void {
-  header('Content-Type: application/json; charset=UTF-8');
-  $out = ['status' => $status];
-  if ($message !== null) $out['message'] = $message;
-  if ($data !== null)    $out['data']    = $data;
-  echo json_encode($out, JSON_UNESCAPED_UNICODE);
-  exit;
-}
+// function jsonResponse(string $status, ?string $message = null, $data = null): void {
+//   header('Content-Type: application/json; charset=UTF-8');
+//   $out = ['status' => $status];
+//   if ($message !== null) $out['message'] = $message;
+//   if ($data !== null)    $out['data']    = $data;
+//   echo json_encode($out, JSON_UNESCAPED_UNICODE);
+//   exit;
+// }
 
 /** 半角=1, 全角=2 の長さ */
 function mbLengthZenkakuAware(string $s): int {
@@ -223,9 +225,11 @@ try {
     jsonResponse('success', 'updated', $r0['data']);
   }
 } catch (Throwable $e) {
+  error_log('[UPDATE_ERROR] '.$e->getMessage());
   http_response_code(500);
   jsonResponse('error', 'Server Error: '.$e->getMessage());
 }
+
 
 // } catch (Throwable $e) {
 //   error_log('[ATTENDANCE_UPDATE] '.$e->getMessage());
