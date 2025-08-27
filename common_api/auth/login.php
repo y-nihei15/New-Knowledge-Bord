@@ -32,11 +32,11 @@ require_once __DIR__ . '/../jwt/token_issue.php'; // issue_token() を定義
 require_once __DIR__ . '/../config/db.php';       // getDbConnection() を定義
 
 // フォーム送信で受け取る
-$accountId = $_POST['account_id'] ?? '';
+$userId = $_POST['user_id'] ?? '';
 $password  = $_POST['password'] ?? '';
 
 // 未入力チェック
-if ($accountId === '' || $password === '') {
+if ($userId === '' || $password === '') {
     http_response_code(400);
     echo json_encode(['ok' => false, 'error' => 'IDとパスワードを入力してください']);
     exit;
@@ -46,8 +46,8 @@ try {
     $pdo = getDbConnection();
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // DB検索
-    $stmt = $pdo->prepare('SELECT account_id, password FROM login_info WHERE account_id = :id LIMIT 1');
-    $stmt->execute([':id' => (int)$accountId]);
+    $stmt = $pdo->prepare('SELECT user_id, password FROM login_info WHERE user_id = :id LIMIT 1');
+    $stmt->execute([':id' => (int)$userId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$row) {
@@ -69,10 +69,10 @@ try {
 
             // 成功したので bcrypt で更新しておく
             $newHash = password_hash($password, PASSWORD_BCRYPT);
-            $upd = $pdo->prepare('UPDATE login_info SET password = :new WHERE account_id = :id');
+            $upd = $pdo->prepare('UPDATE login_info SET password = :new WHERE user_id = :id');
             $upd->execute([
                 ':new' => $newHash,
-                ':id'  => (int)$row['account_id']
+                ':id'  => (int)$row['user_id']
             ]);
         }
     }
@@ -84,7 +84,7 @@ try {
     }
 
     // JWT発行
-    $result = issue_token((int)$row['account_id']);
+    $result = issue_token((int)$row['user_id']);
 
     echo json_encode([
         'ok'    => true,

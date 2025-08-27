@@ -16,7 +16,7 @@
       <!-- JSでsubmitを止めてfetchする（method/actionは残してOK） -->
       <form id="loginForm" class="LoginFields" method="post" action="../common_api/auth/login.php" autocomplete="on" novalidate>
         <p class="LoginLabel">ユーザーID</p>
-        <input class="LoginText" type="text" name="account_id" required autocomplete="username">
+        <input class="LoginText" type="text" name="user_id" required autocomplete="username">
 
         <p class="LoginLabel">パスワード</p>
         <input class="LoginText" type="password" name="password" required autocomplete="current-password">
