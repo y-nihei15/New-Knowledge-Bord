@@ -5,6 +5,9 @@ require_once __DIR__.'/../common_api/config/db.php';
 require_once __DIR__.'/../common_api/jwt/require_auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/../common_api/jwt/require_auth.php';
+$claims = require_auth(['json' => true]); // OKならここを通過、NGなら401 JSON返して終了
+
 $auth = require_auth();            // ← Authorization: Bearer 必須（401で弾く）
 $pdo  = getDbConnection();
 

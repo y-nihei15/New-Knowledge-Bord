@@ -1,14 +1,4 @@
 <?php
-declare(strict_types=1);
-
-// // 鍵の読み込み
-// require_once __DIR__ . '/../key/key_loader.php';
-// $keys = require __DIR__ . '/../key/key_loader.php';
-
-// // ライブラリ利用
-// use Firebase\JWT\JWT;
-// use Firebase\JWT\Key;
-
 // 依存: config/db.php, utils/response.php（任意）, このファイルはヘルパ群
 require_once __DIR__ . '/../config/db.php';
 
@@ -98,4 +88,3 @@ function jwt_db_is_revoked_or_expired(PDO $pdo, string $jwtId): bool {
     if ((int)$row['is_manually_revoked'] === 1) return true;
     return strtotime($row['expires_at']) <= time();
 }
-

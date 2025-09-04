@@ -34,17 +34,32 @@
       const fd = new FormData(e.target);
       const res = await fetch('../common_api/auth/login.php', {
         method: 'POST',
-        body: new URLSearchParams(fd)
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: e.target.user_id.value.trim(),
+          password: e.target.password.value
+        }),
+        credentials: 'omit' // ← クッキー未使用ならこれでCORSの制約を回避
       });
-      const data = await res.json().catch(() => null);
 
-      // ← ここでチェックして main.html に遷移
-      if (data && data.ok && data.token) {
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (_) {}
+
+      console.log("login response:", data);
+
+      if (res.ok && data?.ok && data?.token) {
         sessionStorage.setItem('access_token', data.token);
-        location.href = './main.php'; // ← 殻ページに遷移
+        location.href = './main.php';
       } else {
-        alert(data?.error || 'ログイン失敗');
+        // サーバが401/500でも、返ってきたJSONのエラー文を優先表示
+        alert(data?.error || `ログイン失敗（HTTP ${res.status}）`);
       }
+
     });
   </script>
 </body>
