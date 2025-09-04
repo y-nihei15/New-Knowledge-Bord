@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // JSONを壊さない（画面にエラーを出さない）
 ini_set('display_errors', '0');
-ini_set('log_errors', '1');<?php
+ini_set('log_errors', '1');
 
 declare(strict_types=1);
 ini_set('display_errors', '0'); // API応答がJSONなので画面出力はNG
