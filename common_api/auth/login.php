@@ -1,43 +1,56 @@
 <?php
+ 
 declare(strict_types=1);
-ini_set('display_errors', '1');
+ini_set('display_errors', '0'); // API応答がJSONなので画面出力はNG
+ini_set('log_errors', '1');     // 代わりにエラーログへ
 error_reporting(E_ALL);
-
+ 
 header('Content-Type: application/json; charset=utf-8');
-
+ 
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../common_api/jwt/jwt_service.php';
-$jwt_cfg = require __DIR__ . '/../common_api/jwt/jwt_config.php';
-
+require_once __DIR__ . '/../jwt/jwt_service.php';
+$jwt_cfg = require __DIR__ . '/../jwt/jwt_config.php';
+ 
 /* ===== CORS（同一オリジンなら気にしなくてOK。将来のために置いておく） ===== */
 $allowOrigin = $jwt_cfg['allow_origin'] ?? '*';
 $allowCreds  = !empty($jwt_cfg['use_cookie']);
-header('Access-Control-Allow-Origin: ' . $allowOrigin);
+$reqOrigin   = $_SERVER['HTTP_ORIGIN'] ?? '';
+ 
+if ($allowCreds && $reqOrigin !== '') {
+    // 資格情報ありのときはワイルドカード不可。来訪元をそのまま返す
+    header('Access-Control-Allow-Origin: ' . $reqOrigin);
+    header('Vary: Origin');
+    header('Access-Control-Allow-Credentials: true');
+} else {
+    header('Access-Control-Allow-Origin: ' . $allowOrigin);
+}
+ 
 header('Access-Control-Allow-Headers: Authorization, Content-Type');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-if ($allowCreds) header('Access-Control-Allow-Credentials: true');
-
+ 
+ 
 // プリフライト即返し
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
-
+ 
 // 直アクセスは画面へ
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     header('Location: ../../main/loginScreen.php');
     exit;
 }
-
+ 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'Method Not Allowed']);
     exit;
 }
-
+ 
 /* ===== 入力（フォーム or JSON 両対応。※フロントはフォーム送信） ===== */
 $ctype = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
-$userId = ''; $password = '';
+$userId = '';
+$password = '';
 if (is_string($ctype) && stripos($ctype, 'application/json') !== false) {
     $raw = file_get_contents('php://input') ?: '';
     $data = json_decode($raw, true) ?: [];
@@ -47,91 +60,87 @@ if (is_string($ctype) && stripos($ctype, 'application/json') !== false) {
     $userId  = (string)($_POST['user_id'] ?? '');
     $password = (string)($_POST['password'] ?? '');
 }
-
+ 
 if ($userId === '' || $password === '') {
     http_response_code(400);
     echo json_encode(['ok' => false, 'error' => 'IDとパスワードを入力してください']);
     exit;
 }
-
+ 
 try {
     $pdo = getDbConnection();
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+ 
     // 数値キャストしない（英数字IDOK）
     $stmt = $pdo->prepare('SELECT user_id, password FROM login_info WHERE user_id = :id LIMIT 1');
     $stmt->bindValue(':id', $userId, PDO::PARAM_STR);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
+ 
     if (!$row) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'ユーザー未存在']);
         exit;
     }
-
+ 
     $stored = (string)$row['password'];
+    $stored = rtrim($stored); // ← CHAR列の右詰め空白対策（重要）
     $ok = false;
-
-    // ハッシュならverify、平文なら一致→ハッシュ移行
-    if ($stored !== '' && password_get_info($stored)['algo'] !== 0) {
+ 
+    $info = password_get_info($stored);
+    $recognizedHash = ($stored !== '' && ($info['algo'] ?? 0) !== 0);
+ 
+    if ($recognizedHash) {
+        // 既に password_hash 系（bcrypt/argon 等）なら通常検証
         $ok = password_verify($password, $stored);
+ 
+        // 顔合わせ：必要なら再ハッシュ（コスト変更やアルゴ進化に追従）
+        // ★ 暫定：BCRYPT固定（60文字）。DB拡張後は DEFAULT に戻す
+        if ($ok && password_needs_rehash($stored, PASSWORD_BCRYPT)) {
+            $rehash = password_hash($password, PASSWORD_BCRYPT);
+            $pdo->prepare('UPDATE login_info SET password = :new WHERE user_id = :id')
+                ->execute([':new' => $rehash, ':id' => $userId]);
+        }
+ 
+        $newHash = password_hash($password, PASSWORD_BCRYPT);
+        $pdo->prepare('UPDATE login_info SET password = :new WHERE user_id = :id')
+            ->execute([':new' => $newHash, ':id' => $userId]);
     } else {
-        if (hash_equals($stored, $password)) {
+        // 平文想定：空白が混入していたら除去済みなので純粋比較
+        if ($stored !== '' && hash_equals($stored, $password)) {
             $ok = true;
-            $newHash = password_hash($password, PASSWORD_BCRYPT);
-            $upd = $pdo->prepare('UPDATE login_info SET password = :new WHERE user_id = :id');
-            $upd->execute([':new' => $newHash, ':id' => $userId]);
+            // 平文から安全なハッシュへ移行
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            $pdo->prepare('UPDATE login_info SET password = :new WHERE user_id = :id')
+                ->execute([':new' => $newHash, ':id' => $userId]);
         }
     }
-
+ 
     if (!$ok) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'パスワード不一致']);
         exit;
     }
-
+ 
     /* ===== JWT発行（新スタックに合わせる） ===== */
     $now = time();
     $ttl = (int)($jwt_cfg['ttl'] ?? 900); // 15分デフォ
     $exp = $now + $ttl;
     $jti = bin2hex(random_bytes(16));     // 32桁hex（UUIDでもOK）
-
+ 
     $claims = [
-        'iss' => $jwt_cfg['iss'] ?? 'attendance-api',
-        'aud' => $jwt_cfg['aud'] ?? 'attendance-client',
-        'sub' => $userId,
-        'account_id' => $userId, // 数値IDが別にあるなら差し替え
-        'jti' => $jti,
+        'iss' => $cfg['issuer'],
+        'aud' => $cfg['audience'],
         'iat' => $now,
         'nbf' => $now,
         'exp' => $exp,
+        'jti' => $jti,
+        'sub' => 'ip_gate_user',
+        'ip'  => $clientIp,
     ];
-
-    $token = jwt_issue($claims, $jwt_cfg);
-
-    // 失効・期限管理のため登録（実装があれば）
-    if (function_exists('jwt_db_register')) {
-        jwt_db_register($pdo, $jti, $exp, $userId);
-    }
-
-    // Cookie運用もするならここでSet-Cookie（任意）
-    if (!empty($jwt_cfg['use_cookie']) && !empty($jwt_cfg['cookie_name'])) {
-        $cookieName = $jwt_cfg['cookie_name'];
-        $secure  = !empty($jwt_cfg['cookie_secure']) ? true : (!empty($_SERVER['HTTPS']));
-        $domain  = $jwt_cfg['cookie_domain'] ?? '';
-        $path    = $jwt_cfg['cookie_path'] ?? '/';
-        $sameSite= $jwt_cfg['cookie_samesite'] ?? 'None';
-        setcookie($cookieName, $token, [
-            'expires'  => $exp,
-            'path'     => $path,
-            'domain'   => $domain ?: null,
-            'secure'   => $secure,
-            'httponly' => true,
-            'samesite' => $sameSite,
-        ]);
-    }
-
+ 
+    $token =jwt_generate($claims, $jwt_cfg);
+ 
     // ★ フロントの期待形（ok/token/exp）だけ返す
     echo json_encode([
         'ok'    => true,
@@ -139,7 +148,7 @@ try {
         'exp'   => $exp,
     ], JSON_UNESCAPED_UNICODE);
     exit;
-
+ 
 } catch (Throwable $e) {
     error_log('[auth/login] ' . $e->getMessage());
     http_response_code(500);
