@@ -1,6 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
+require_once __DIR__ . '/jwt_service.php';
 require_once __DIR__ . '/jwt_service.php';
 require_once __DIR__ . '/../config/db.php';
 
@@ -70,3 +72,4 @@ function _auth_fail(string $error, string $description, int $statusCode, string 
     echo json_encode(['ok'=>false,'error'=>$error,'message'=>$description], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     exit;
 }
+

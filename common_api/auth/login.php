@@ -140,7 +140,7 @@ try {
     $stmt->bindValue(':id', $userId, PDO::PARAM_STR);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
+ 
     if (!$row) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'ユーザー未存在'], JSON_UNESCAPED_UNICODE);
@@ -173,7 +173,7 @@ try {
                 ->execute([':new' => $newHash, ':id' => $userId]);
         }
     }
-
+ 
     if (!$ok) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'パスワード不一致'], JSON_UNESCAPED_UNICODE);
