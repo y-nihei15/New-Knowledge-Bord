@@ -1,21 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/db.php';  // getDbConnection()
-
-// 使い方（任意のロール/有効期限日数をCLI引数で指定可）
-// php generate_keys.php <role=default> <expires_days=365>
-
-function uuid_v4(): string {
-    $d = random_bytes(16);
-    $d[6] = chr((ord($d[6]) & 0x0F) | 0x40);
-    $d[8] = chr((ord($d[8]) & 0x3F) | 0x80);
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($d), 4));
-}
-
-$role = $argv[1] ?? 'default';
-$expiresDays = (int)($argv[2] ?? 365);
-
 $dir = __DIR__;
 $privatePem = $dir . DIRECTORY_SEPARATOR . 'private.pem';
 $publicPem  = $dir . DIRECTORY_SEPARATOR . 'public.pem';

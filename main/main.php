@@ -3,7 +3,6 @@
  * 出席管理（統合版）
  * - 「1」をベースに、「2」の堅牢化/差分送信/文字数制御などを反映
  * - 追加: JWT運用に合わせたフロント側の自己修復＆Authorization付与
- * - 追加: JWT運用に合わせたフロント側の自己修復＆Authorization付与
  ***********************/
 declare(strict_types=1);
 
@@ -14,7 +13,6 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/../common_api/config/db.php';
 
 /* 共通ユーティリティ */
-function e($v) {
 function e($v) {
   return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
@@ -79,12 +77,7 @@ foreach ($rows as $r) {
 
 /* ステータス表現（1在席/2欠席/3休暇）→ data-status は 1/2/3 を採用 */
 function statusClass(int $tinyInt) {
-function statusClass(int $tinyInt) {
   switch ($tinyInt) {
-    case 1: return ['class' => 'blue',  'data' => 1]; // present
-    case 2: return ['class' => 'red',   'data' => 2]; // absent
-    case 3: return ['class' => 'green', 'data' => 3]; // leave
-    default:return ['class' => 'red',   'data' => 2]; // 未設定→absent(2)
     case 1: return ['class' => 'blue',  'data' => 1]; // present
     case 2: return ['class' => 'red',   'data' => 2]; // absent
     case 3: return ['class' => 'green', 'data' => 3]; // leave
@@ -317,15 +310,12 @@ function statusClass(int $tinyInt) {
 
     /* ===== 全角=2 / 半角=1 の換算で150以内に丸める（コメント・行先） ===== */
     function isHalfWidthAscii(ch) { return /[ -~]/.test(ch); } // ASCII可視文字 + スペース
-    function isHalfWidthAscii(ch) { return /[ -~]/.test(ch); } // ASCII可視文字 + スペース
     function trimToVisualLimit(s, maxLen = 150) {
       if (!s) return '';
-      let len = 0, out = '';
       let len = 0, out = '';
       for (const ch of s) {
         const add = isHalfWidthAscii(ch) ? 1 : 2;
         if (len + add > maxLen) break;
-        len += add; out += ch;
         len += add; out += ch;
       }
       return out;
@@ -346,35 +336,26 @@ function statusClass(int $tinyInt) {
       if (!Number.isFinite(id) || id <= 0) return null;
 
       const item = { account_id: id };
-      const item = { account_id: id };
 
       // status（変更があれば送る）: '1'|'2'|'3'
       const curS  = Number.parseInt(btn.dataset.status ?? '1', 10);
-      // status（変更があれば送る）: '1'|'2'|'3'
-      const curS  = Number.parseInt(btn.dataset.status ?? '1', 10);
       const origS = Number.parseInt(btn.dataset.origStatus ?? '1', 10);
-      if (curS !== origS) item.status = String(curS);
       if (curS !== origS) item.status = String(curS);
 
       // plan/comment
       const inputs = row.querySelectorAll('.UserDetails input');
       const planEl = inputs[0], commEl = inputs[1];
-      const planEl = inputs[0], commEl = inputs[1];
 
       if (planEl) {
         const newVal  = trimToVisualLimit((planEl.value ?? '').trim(), 150);
-        const newVal  = trimToVisualLimit((planEl.value ?? '').trim(), 150);
         const origVal = planEl.dataset.orig ?? '';
-        const origNull= planEl.dataset.origNull === '1';
         const origNull= planEl.dataset.origNull === '1';
         const changed = (origNull && newVal !== '') || (!origNull && newVal !== origVal);
         if (changed) item.plan = (newVal === '') ? '' : newVal;
       }
       if (commEl) {
         const newVal  = trimToVisualLimit((commEl.value ?? '').trim(), 150);
-        const newVal  = trimToVisualLimit((commEl.value ?? '').trim(), 150);
         const origVal = commEl.dataset.orig ?? '';
-        const origNull= commEl.dataset.origNull === '1';
         const origNull= commEl.dataset.origNull === '1';
         const changed = (origNull && newVal !== '') || (!origNull && newVal !== origVal);
         if (changed) item.comment = (newVal === '') ? '' : newVal;
@@ -385,23 +366,10 @@ function statusClass(int $tinyInt) {
 
     /* ===== fetch ラッパ（Authorization 付与＋401自己修復＋タイムアウト＋JSON厳格化） ===== */
     async function postJSON(url, payload, { timeoutMs = 15000 } = {}) {
-    /* ===== fetch ラッパ（Authorization 付与＋401自己修復＋タイムアウト＋JSON厳格化） ===== */
-    async function postJSON(url, payload, { timeoutMs = 15000 } = {}) {
       const controller = new AbortController();
       let timedOut = false;
       const to = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
-      const to = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
 
-      const makeHeaders = (tkn) => {
-        const h = new Headers({ 'Content-Type':'application/json' });
-        if (tkn) h.set('Authorization', 'Bearer ' + tkn);
-        return h;
-      };
-
-      try {
-        // 1) まずは手持ちトークンで投げる
-        let token = sessionStorage.getItem('jwt') || sessionStorage.getItem('access_token') || '';
-        let res   = await fetch(url, {
       const makeHeaders = (tkn) => {
         const h = new Headers({ 'Content-Type':'application/json' });
         if (tkn) h.set('Authorization', 'Bearer ' + tkn);
@@ -413,7 +381,6 @@ function statusClass(int $tinyInt) {
         let token = sessionStorage.getItem('jwt') || sessionStorage.getItem('access_token') || '';
         let res   = await fetch(url, {
           method: 'POST',
-          headers: makeHeaders(token),
           headers: makeHeaders(token),
           body: JSON.stringify(payload),
           signal: controller.signal,
@@ -493,8 +460,5 @@ function statusClass(int $tinyInt) {
   <script src="./js/script.js"></script>
 
   <!-- 旧「ログインしてください」アラート判定は削除（authGate が担当） -->
-
-  <!-- 旧「ログインしてください」アラート判定は削除（authGate が担当） -->
 </body>
 </html>
-
