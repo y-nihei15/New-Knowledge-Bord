@@ -22,20 +22,11 @@ function issue_token(int $accountId): array {
         'sub' => (string)$accountId, // 認可判定用
         'jti' => $jti,
     ];
+    
     $jwt = jwt_generate($claims, $cfg);
 
     // DBへ登録（発行日時、失効日時＝発行日+90日）
     jwt_db_insert($pdo, $jti, $accountId, $now, $exp);
 
-    // Cookie運用するならここでセット（任意）
-    if (!headers_sent() && !empty($cfg['cookie_name'])) {
-        setcookie($cfg['cookie_name'], $jwt, [
-            'expires'  => $exp->getTimestamp(),
-            'path'     => '/',
-            'secure'   => true,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
     return ['token'=>$jwt, 'jwt_id'=>$jti, 'exp'=>$exp->format(DATE_ATOM)];
 }

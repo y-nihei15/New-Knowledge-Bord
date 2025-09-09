@@ -1,0 +1,11 @@
+# minimal openssl.cnf for Windows PHP
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+base = base_sect
+
+[base_sect]
+activate = 1
