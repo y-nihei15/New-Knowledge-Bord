@@ -225,6 +225,7 @@ function statusClass(int $tinyInt) {
         <a onclick="LoadFloor(10)">本社(出向/EBS/契約)</a>
         <div class="Spacer"></div>
         <a href="./Naisen_list.php">内線一覧</a>
+        <a href="./edit.php">編集</a>
       </div>
     </div>
 
