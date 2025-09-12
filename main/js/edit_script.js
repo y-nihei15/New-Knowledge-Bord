@@ -95,26 +95,26 @@ function LoadFloor(locationId){
 
 // ====== CSVインポート結果のポップアップ共通関数 ======
 // edit_script.js
-// v5
-// 正：更新はサーバー値そのまま、追加=ユーザー追加+部署追加
+// v6  ←（任意）バージョン表記だけ上げました
 window.showImportResult = function (j) {
   try {
     const toInt = v => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
-    const updated       = toInt(j?.updated);      // 既存ユーザー更新件数（サーバー値をそのまま表示）
-    const insertedUsers = toInt(j?.inserted);     // 新規ユーザー件数
+    const updated       = toInt(j?.updated);
+    const insertedUsers = toInt(j?.inserted);
     const skipped       = toInt(j?.skipped);
+    const deleted       = toInt(j?.deleted); // ★ 追加: 削除件数
 
     const depts     = Array.isArray(j?.new_departments) ? j.new_departments : [];
     const deptAdded = depts.length;
 
-    // 追加 = ユーザー追加 + 部署追加
+    // 追加 = ユーザー追加 + 部署追加（従来仕様のまま）
     const addedTotal = insertedUsers + deptAdded;
 
     const lines = [];
-    lines.push(`インポート完了: 更新 ${updated} / 追加 ${addedTotal} / スキップ ${skipped}`);
+    // ★ ここを修正：削除を含める
+    lines.push(`インポート完了: 更新 ${updated} / 追加 ${addedTotal} / 削除 ${deleted} / スキップ ${skipped}`);
 
-    // 新規部署（名前のみ表示）
     if (deptAdded > 0) {
       const names = depts.map(d => d?.name).filter(Boolean).join(', ');
       lines.push('新規部署: ' + names);
@@ -126,6 +126,7 @@ window.showImportResult = function (j) {
     alert('インポート結果の表示に失敗しました');
   }
 };
+
 
 
 

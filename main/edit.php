@@ -327,7 +327,7 @@ async function importCsv(file){
       window.showImportResult(j);
     } else {
       // フォールバック（万一未定義なら）
-      const msg = `インポート完了: 更新 ${j?.updated ?? 0} / 追加 ${j?.inserted ?? 0} / スキップ ${j?.skipped ?? 0}`;
+      const msg = `インポート完了: 更新 ${j?.updated ?? 0} / 追加 ${(j?.inserted ?? 0) + ((j?.new_departments||[]).length)} / 削除 ${j?.deleted ?? 0} / スキップ ${j?.skipped ?? 0}`;
       alert(msg);
     }
 
@@ -341,7 +341,7 @@ async function importCsv(file){
 }
 </script>
 
-  <script src="./js/edit_script.js?v=8"></script>
+  <script src="./js/edit_script.js?v=9"></script>
 
 </body>
 </html>
