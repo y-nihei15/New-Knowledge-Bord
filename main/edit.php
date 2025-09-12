@@ -62,6 +62,8 @@ if ($locationId !== null && $location) {
     ei.sort ASC,
     CAST(li.user_id AS UNSIGNED) ASC
 ";
+
+
   $list = $pdo->prepare($listSql);
   $list->bindValue(':lid', $locationId, PDO::PARAM_INT);
   $list->execute();
@@ -207,6 +209,7 @@ function statusClass(int $tinyInt) {
         <a onclick="LoadFloor(9)">名古屋センター</a>
         <a onclick="LoadFloor(10)">本社(出向/EBS/契約)</a>
         <div class="Spacer"></div>
+        <a href="./Naisen_list.php">内線一覧</a>
       </div>
     </div>
 
@@ -215,12 +218,14 @@ function statusClass(int $tinyInt) {
       <div class="Logout">
         <button onclick="openCsvPicker()">読込</button>
         <button onclick="exportCsv()">出力</button>
-        <button onclick="Reflect()">反映</button>
+        <a href="main.php">
+        <button>戻る</button>
+        </a>
       </div>
 
-      <!-- ▼ここに追加（見えないinputなので場所はここが一番わかりやすい） -->
-      <input id="CsvFileInput" type="file" accept=".csv,text/csv" style="display:none">
-
+<!-- ▼ここに追加（見えないinputなので場所はここが一番わかりやすい） -->
+  <input id="CsvFileInput" type="file" accept=".csv,text/csv" style="display:none">
+      
       <?php if ($locationId === null): ?>
         <div class="ContentArea">
           <h1>拠点データがありません</h1>
@@ -256,6 +261,68 @@ function statusClass(int $tinyInt) {
       <?php endif; ?>
     </div>
   </div>
+
+  <!-- 管理者だけ「編集」リンクを表示（トークン到着を待つ＋role.phpフォールバック） -->
+  <script>
+  const ROLE_URL = <?= json_encode($scriptDir . '/../top_api/role.php', JSON_UNESCAPED_SLASHES) ?>;
+
+  function showEditLink(asAdmin) {
+    const link = document.getElementById('AdminEditLink');
+    if (!link) return;
+    if (asAdmin) {
+      link.style.display = 'inline';
+      document.body.dataset.role = 'admin';
+    } else {
+      document.body.dataset.role = 'user';
+    }
+  }
+
+  async function refetchRoleOnce() {
+    try {
+      const t = sessionStorage.getItem('jwt') || sessionStorage.getItem('access_token') || '';
+      const res = await fetch(ROLE_URL, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          ...(t ? {'Authorization':'Bearer '+t} : {})
+        },
+        body:'{}',
+        credentials:'same-origin'
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      if (j && j.ok === true && (j.role === 0 || j.role === 1 || j.role === '0' || j.role === '1')) {
+        return Number(j.role);
+      }
+    } catch {}
+    return null;
+  }
+
+  function tryToggleOnce(){
+    const role = readJwtRole(false);
+    if (role === 1) { showEditLink(true);  return true; }
+    if (role === 0) { showEditLink(false); return true; }
+    return false;
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (tryToggleOnce()) return;
+
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries++;
+      if (tryToggleOnce() || tries >= 60) {
+        clearInterval(iv);
+        if (document.body.dataset.role !== 'admin' && document.body.dataset.role !== 'user') {
+          const srvRole = await refetchRoleOnce();
+          if (srvRole === 1) showEditLink(true);
+          else if (srvRole === 0) showEditLink(false);
+        }
+      }
+    }, 200);
+  });
+  </script>
 
 <script>
 function getToken(){
@@ -322,7 +389,7 @@ async function importCsv(file){
       throw new Error((j && j.error) || 'インポートに失敗しました');
     }
 
-    // 詳細ポップアップ（新規部署も表示）
+// 詳細ポップアップ（新規部署も表示）
     if (typeof window.showImportResult === 'function') {
       window.showImportResult(j);
     } else {
