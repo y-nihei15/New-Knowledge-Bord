@@ -105,7 +105,7 @@ try {
   $pdo->beginTransaction();
 
   // ★必要ならより安全に：テーブルロック（並行実行を完全防止）
-  // $pdo->exec('LOCK TABLES employee_info WRITE, login_info WRITE');
+  // $pdo->exec('LOCK TABLES employee_info WRITE, login_info WRITE, dept_mst WRITE');
 
   // ---- 連番の基準：両テーブルの最大 account_id を見る（重複回避の土台） ----
   $selMaxBoth = $pdo->query("
@@ -116,13 +116,28 @@ try {
   ");
   $nextAcc = (int)$selMaxBoth->fetchColumn();
 
-  // 部門 name=>id マップ（キャッシュ）
-  $deptMap = [];
+  // ====== 部門マップ＆ステートメント（dept_name のみ使用） ======
+  $normalizeDept = function($s) {
+    $s = (string)$s;
+    // 全角スペースを半角へ
+    $s = preg_replace('/\x{3000}/u', ' ', $s);
+    // 連続空白を1つに
+    $s = preg_replace('/\s+/u', ' ', $s);
+    return trim($s);
+  };
+
+  // 部門 name -> id マップ
+  $deptMapByName = [];
   $qDepts = $pdo->query("SELECT id, name FROM dept_mst");
   foreach ($qDepts->fetchAll(PDO::FETCH_ASSOC) as $d) {
-    $deptMap[trim((string)$d['name'])] = (int)$d['id'];
+    $deptMapByName[$normalizeDept($d['name'])] = (int)$d['id'];
   }
-  $insDept = $pdo->prepare("INSERT INTO dept_mst (name) VALUES (:name)");
+
+  // name基準のUPSERT（同名なら既存IDを返す）
+  $insDeptAuto = $pdo->prepare("
+    INSERT INTO dept_mst (name) VALUES (:name)
+    ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)
+  ");
 
   // user_id → account_id 変換用（存在チェック用）
   $selAcc = $pdo->prepare("SELECT account_id FROM login_info WHERE user_id=:uid");
@@ -166,6 +181,7 @@ try {
   ");
 
   $updated = 0; $inserted = 0; $skipped = 0;
+  $newDepartments = []; // 追加した部署を返す用
 
   // ===== 本文処理 =====
   while (($row = fgetcsv($fp, 0, $delim)) !== false) {
@@ -182,35 +198,36 @@ try {
 
     if ($userId === '' || $empName === '') { $skipped++; continue; }
 
-    // user_id → account_id 変換（キャッシュ活用）
-    $accountId = $uidCache[$userId] ?? null;
-    if ($accountId === null) {
-      $selAcc->execute([':uid'=>$userId]);
-      $acc = $selAcc->fetchColumn();
-      $accountId = $acc !== false ? (int)$acc : 0;
-      $uidCache[$userId] = $accountId;
-    }
-
     // 任意列：存在かつ非空のときだけ更新値に採用（なければ null → 現状維持）
     $status  = (isset($idx['status'])  && ($row[$idx['status']]  ?? '') !== '') ? (int)$row[$idx['status']]  : null;
     $plan    = (isset($idx['plan'])    && ($row[$idx['plan']]    ?? '') !== '') ? (string)$row[$idx['plan']] : null;
     $comment = (isset($idx['comment']) && ($row[$idx['comment']] ?? '') !== '') ? (string)$row[$idx['comment']] : null;
     if ($status !== null && ($status < 1 || $status > 3)) $status = 2; // 正規化
 
-    // 部門：dept_id 優先、無ければ dept_name で解決（無ければ自動作成※不要ならCREATE部分をコメントアウト）
+    // ===== 部門決定：dept_name のみを使用（dept_id は無視） =====
     $deptId = null;
-    if (isset($idx['dept_id']) && ($row[$idx['dept_id']] ?? '') !== '') {
-      $deptId = (int)$row[$idx['dept_id']];
-    } elseif (isset($idx['dept_name']) && ($row[$idx['dept_name']] ?? '') !== '') {
-      $deptName = (string)$row[$idx['dept_name']];
-      $key = trim($deptName);
-      if ($key !== '') {
-        if (!array_key_exists($key, $deptMap)) {
-          $insDept->execute([':name'=>$key]); // 自動作成を止めたい場合はこの3行をコメントアウト
-          $deptMap[$key] = (int)$pdo->lastInsertId();
+    $csvHasDeptName = isset($idx['dept_name']) && ($row[$idx['dept_name']] ?? '') !== '';
+    if ($csvHasDeptName) {
+      $normName = $normalizeDept((string)$row[$idx['dept_name']]);
+      if ($normName !== '') {
+        if (!isset($deptMapByName[$normName])) {
+          // 新規作成
+          $insDeptAuto->execute([':name' => $normName]); // 既存でも既存IDが返る
+          $newId = (int)$pdo->lastInsertId();
+          $deptMapByName[$normName] = $newId;
+          $newDepartments[] = ['id' => $newId, 'name' => $normName];
         }
-        $deptId = $deptMap[$key];
+        $deptId = $deptMapByName[$normName];
       }
+    }
+
+    // ===== user_id → account_id 変換（キャッシュ活用） =====
+    $accountId = $uidCache[$userId] ?? null;
+    if ($accountId === null) {
+      $selAcc->execute([':uid'=>$userId]);
+      $acc = $selAcc->fetchColumn();
+      $accountId = $acc !== false ? (int)$acc : 0;
+      $uidCache[$userId] = $accountId;
     }
 
     // ===== 既存判定 =====
@@ -326,10 +343,11 @@ try {
   $pdo->commit();
 
   echo json_encode([
-    'ok'       => true,
-    'updated'  => $updated,
-    'inserted' => $inserted,
-    'skipped'  => $skipped
+    'ok'             => true,
+    'updated'        => $updated,
+    'inserted'       => $inserted,
+    'skipped'        => $skipped,
+    'new_departments'=> $newDepartments, // 追加: 新規作成した部署一覧
   ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {

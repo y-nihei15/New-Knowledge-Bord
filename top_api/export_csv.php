@@ -17,13 +17,12 @@ if ($locationId === null) {
   exit;
 }
 
-// CSV出力列から location_id を除外
+// CSV出力列（dept_id も除外して dept_name のみ）
 $sql = "
   SELECT
     li.user_id,
     ei.name AS emp_name,
     COALESCE(d.name,'') AS dept_name,
-    d.id AS dept_id,
     ei.sort
   FROM employee_info ei
   LEFT JOIN dept_mst   d  ON d.id  = ei.dept_id
@@ -40,8 +39,8 @@ $st->bindValue(':lid', $locationId, PDO::PARAM_INT);
 $st->execute();
 $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
-// 出力カラム定義（location_id を外す）
-$columns = ['user_id','emp_name','dept_name','dept_id','sort'];
+// 出力カラム定義（dept_id は削除）
+$columns = ['user_id','emp_name','dept_name','sort'];
 
 $filename = sprintf('attendance_%d_%s.csv', $locationId, date('Ymd_His'));
 header('Content-Type: text/csv; charset=UTF-8');

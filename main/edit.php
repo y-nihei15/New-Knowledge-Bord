@@ -62,8 +62,6 @@ if ($locationId !== null && $location) {
     ei.sort ASC,
     CAST(li.user_id AS UNSIGNED) ASC
 ";
-
-
   $list = $pdo->prepare($listSql);
   $list->bindValue(':lid', $locationId, PDO::PARAM_INT);
   $list->execute();
@@ -188,6 +186,8 @@ function statusClass(int $tinyInt) {
   <script>
   const EXPORT_URL  = <?= json_encode($scriptDir . '/../top_api/export_csv.php', JSON_UNESCAPED_SLASHES) ?>;
   const CURRENT_LOCATION_ID = <?= (int)$locationId ?>;
+  // Reflect() から参照するためグローバル公開
+  window.API_ENDPOINT = <?= json_encode($apiEndpoint, JSON_UNESCAPED_SLASHES) ?>;
 </script>
 
 </head>
@@ -218,10 +218,9 @@ function statusClass(int $tinyInt) {
         <button onclick="Reflect()">反映</button>
       </div>
 
-<!-- ▼ここに追加（見えないinputなので場所はここが一番わかりやすい） -->
-  <input id="CsvFileInput" type="file" accept=".csv,text/csv" style="display:none">
+      <!-- ▼ここに追加（見えないinputなので場所はここが一番わかりやすい） -->
+      <input id="CsvFileInput" type="file" accept=".csv,text/csv" style="display:none">
 
-      
       <?php if ($locationId === null): ?>
         <div class="ContentArea">
           <h1>拠点データがありません</h1>
@@ -384,7 +383,15 @@ async function importCsv(file){
     if (!res.ok || !j || j.ok !== true) {
       throw new Error((j && j.error) || 'インポートに失敗しました');
     }
-    alert(`インポート完了: 更新 ${j.updated} / 追加 ${j.inserted} / スキップ ${j.skipped}`);
+
+    // 詳細ポップアップ（新規部署も表示）
+    if (typeof window.showImportResult === 'function') {
+      window.showImportResult(j);
+    } else {
+      // フォールバック（万一未定義なら）
+      const msg = `インポート完了: 更新 ${j?.updated ?? 0} / 追加 ${j?.inserted ?? 0} / スキップ ${j?.skipped ?? 0}`;
+      alert(msg);
+    }
 
     // 同じ拠点IDで再読込（サーバ側レンダリングに合わせてページ遷移が簡単）
     const u = new URL(location.href);
@@ -396,8 +403,7 @@ async function importCsv(file){
 }
 </script>
 
+  <script src="./js/edit_script.js?v=8"></script>
 
-
-  <script src="./js/edit_script.js"></script>
 </body>
 </html>

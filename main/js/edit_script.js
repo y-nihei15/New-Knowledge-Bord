@@ -93,6 +93,44 @@ function LoadFloor(locationId){
   location.assign(url.toString());
 }
 
+// ====== CSVインポート結果のポップアップ共通関数 ======
+// edit_script.js
+// v5
+// 正：更新はサーバー値そのまま、追加=ユーザー追加+部署追加
+window.showImportResult = function (j) {
+  try {
+    const toInt = v => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
+    const updated       = toInt(j?.updated);      // 既存ユーザー更新件数（サーバー値をそのまま表示）
+    const insertedUsers = toInt(j?.inserted);     // 新規ユーザー件数
+    const skipped       = toInt(j?.skipped);
+
+    const depts     = Array.isArray(j?.new_departments) ? j.new_departments : [];
+    const deptAdded = depts.length;
+
+    // 追加 = ユーザー追加 + 部署追加
+    const addedTotal = insertedUsers + deptAdded;
+
+    const lines = [];
+    lines.push(`インポート完了: 更新 ${updated} / 追加 ${addedTotal} / スキップ ${skipped}`);
+
+    // 新規部署（名前のみ表示）
+    if (deptAdded > 0) {
+      const names = depts.map(d => d?.name).filter(Boolean).join(', ');
+      lines.push('新規部署: ' + names);
+    }
+
+    alert(lines.join('\n'));
+  } catch (e) {
+    console.error('showImportResult error:', e, j);
+    alert('インポート結果の表示に失敗しました');
+  }
+};
+
+
+
+
+
 /* ===== 一括反映：差分のみ送信 ===== */
     async function Reflect() {
       const items = [];
