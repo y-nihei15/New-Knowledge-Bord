@@ -35,55 +35,77 @@ final class JwtSignaturesRepo {
     }
 
     public function insertSignatureRow(
-        string $keyId,
-        string $publicKeyPath,
-        ?string $role = null,
-        int $daysValid = 365,
-        string $alg = 'RS256',
-        ?string $useVal = null
-    ): void {
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    string $keyId,
+    string $publicKeyPath,
+    ?string $role = null,
+    int $daysValid = 365,
+    string $alg = 'RS256',
+    ?string $useVal = null
+): void {
+    $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $pub = @file_get_contents($publicKeyPath);
-        if ($pub === false) throw new RuntimeException("public key not readable: {$publicKeyPath}");
-        $secretHash = hash('sha256', $pub);
-
-        $expiresAt = (new DateTimeImmutable('now'))
-            ->add(new DateInterval('P'.$daysValid.'D'))
-            ->format('Y-m-d H:i:s');
-
-        $dbName = (string)$this->pdo->query('SELECT DATABASE()')->fetchColumn();
-        $useVal = $useVal ?? $this->chooseUseValue($dbName);
-
-        // === id を自前採番 ===
-        $this->pdo->beginTransaction();
-        try {
-            $nextId = (int)$this->pdo
-                ->query("SELECT COALESCE(MAX(`id`),0)+1 FROM `jwt_signatures` FOR UPDATE")
-                ->fetchColumn();
-
-            $cols   = ['`id`','`key_id`','`secret_hash`','`alg`','`use`','`expires_at`'];
-            $vals   = [':id',  ':key_id',  ':secret_hash',  ':alg',  ':use',  ':expires_at'];
-            $params = [
-                ':id'          => $nextId,
-                ':key_id'      => $keyId,
-                ':secret_hash' => $secretHash,
-                ':alg'         => $alg,
-                ':use'         => $useVal,
-                ':expires_at'  => $expiresAt,
-            ];
-            if ($role !== null) {
-                $cols[]='`role`'; $vals[]=':role'; $params[':role']=$role;
-            }
-
-            $sql = 'INSERT INTO `jwt_signatures` ('.implode(',', $cols).') VALUES ('.implode(',', $vals).')';
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($params);
-
-            $this->pdo->commit();
-        } catch (\Throwable $e) {
-            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
-            throw $e;
-        }
+    // 公開鍵読み込み
+    $pub = @file_get_contents($publicKeyPath);
+    if ($pub === false) {
+        throw new RuntimeException("public key not readable: {$publicKeyPath}");
     }
+
+    // VARBINARY(65) に入るよう生バイトでハッシュ（32バイト）
+    $secretHash = hash('sha256', $pub, true);
+
+    // 失効日時
+    $expiresAt =  (new DateTimeImmutable('now'))
+        ->add(new DateInterval('PT3600S'))
+        ->format('Y-m-d H:i:s');
+    $scheduledDeletionAt = (new DateTimeImmutable('now'))
+        ->add(new DateInterval('P'.$daysValid.'D'))
+        ->format('Y-m-d H:i:s');
+
+    // use の選択（enum: 'jwt' | 'hmac' | 'both'）
+    $dbName = (string)$this->pdo->query('SELECT DATABASE()')->fetchColumn();
+    $useVal = $useVal ?? $this->chooseUseValue($dbName);
+
+    // スキーマのデフォルトに合わせる
+    $role    = $role   ?? 'users';
+    $status  = 'active';
+    $isRevoked = 0;
+    $revokedAt = null;
+
+    $this->pdo->beginTransaction();
+    try {
+        // id を手動採番（テーブルが AUTO_INCREMENT でない前提）
+        $nextId = (int)$this->pdo
+            ->query('SELECT COALESCE(MAX(`id`),0)+1 FROM `jwt_signatures` FOR UPDATE')
+            ->fetchColumn();
+
+        $sql = '
+            INSERT INTO `jwt_signatures`
+                (`id`, `key_id`, `role`, `issued_at`, `status`, `is_revoked`,
+                 `revoked_at`, `scheduled_deletion_at`, `secret_hash`, `alg`, `use`, `expires_at`)
+            VALUES
+                (:id, :key_id, :role, NOW(), :status, :is_revoked,
+                 :revoked_at, :scheduled_deletion_at, :secret_hash, :alg, :use, :expires_at)
+        ';
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->bindValue(':id', $nextId, PDO::PARAM_INT);
+        $stmt->bindValue(':key_id', $keyId, PDO::PARAM_STR);
+        $stmt->bindValue(':role', $role, PDO::PARAM_STR);
+        $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+        $stmt->bindValue(':is_revoked', $isRevoked, PDO::PARAM_INT);
+        $stmt->bindValue(':revoked_at', $revokedAt, PDO::PARAM_NULL);
+        $stmt->bindValue(':scheduled_deletion_at', $scheduledDeletionAt, PDO::PARAM_NULL);
+        $stmt->bindValue(':secret_hash', $secretHash, PDO::PARAM_LOB); // 生バイト
+        $stmt->bindValue(':alg', $alg, PDO::PARAM_STR);
+        $stmt->bindValue(':use', $useVal, PDO::PARAM_STR);
+        $stmt->bindValue(':expires_at', $expiresAt, PDO::PARAM_STR);
+
+        $stmt->execute();
+        $this->pdo->commit();
+    } catch (\Throwable $e) {
+        if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+        throw $e;
+    }
+}
+
 }

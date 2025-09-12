@@ -36,7 +36,9 @@ CNF;
 function dump_openssl_errors(string $prefix = 'OpenSSL'): void {
     $errs = [];
     while ($e = openssl_error_string()) { $errs[] = $e; }
-    if ($errs) fwrite(STDERR, $prefix . " errors:\n  - " . implode("\n  - ", $errs) . "\n");
+    if ($errs) {
+        error_log($prefix . " errors:\n  - " . implode("\n  - ", $errs));
+    }
 }
 
 // 2) 鍵生成
@@ -65,16 +67,14 @@ $pubPemOut = $details['key'];
 // 書き出し
 file_put_contents($privatePem, $privPemOut);
 file_put_contents($publicPem, $pubPemOut);
-echo "Generated private.pem & public.pem in {$dir}\n";
 
 // ここから DB 登録処理
-require_once __DIR__ . '/jwt_signatures_repo.php';
 require_once __DIR__ . '/../config/db.php'; // ← getDbConnection() を提供するファイル
+require_once __DIR__ . '/jwt_signatures_repo.php';
 
 $pdo = getDbConnection();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $dbName = $pdo->query('SELECT DATABASE()')->fetchColumn();
-echo "[DB] {$dbName}\n";
 
 // 署名鍵ID（例: ランダム生成。既存の仕様に合わせてください）
 $generatedKeyId = 'key-'.bin2hex(random_bytes(4));
@@ -82,8 +82,6 @@ $generatedKeyId = 'key-'.bin2hex(random_bytes(4));
 $repo = new JwtSignaturesRepo($pdo);
 try {
     $repo->insertSignatureRow($generatedKeyId, $publicPem, 'users');
-    echo "[OK] inserted key_id={$generatedKeyId}\n";
 } catch (Throwable $e) {
     error_log('[JWT INSERT ERROR] '.$e->getMessage());
-    echo "[JWT INSERT ERROR] ".$e->getMessage()."\n";
 }

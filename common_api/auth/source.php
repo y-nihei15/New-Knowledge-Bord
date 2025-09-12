@@ -12,7 +12,7 @@ ini_set('display_errors','0');
 ini_set('log_errors','1');
 ini_set('error_log','/tmp/php-jwt.log');
 
-const BASE_URL  = '/bbs/';
+const BASE_URL  = '/bbs/bbsTest/n-yoneda/';
 const MAIN_URL  = BASE_URL . 'main/main.php';
 const LOGIN_URL = BASE_URL . 'main/loginScreen.php';
 

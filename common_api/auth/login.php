@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 ini_set('display_errors', '0'); // API応答がJSONなので画面出力はNG
 ini_set('log_errors', '1');     // 代わりにエラーログへ
-error_reporting(E_ALL);
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -159,8 +158,10 @@ try {
         'token' => $token,
         'exp'   => $exp,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
     
+    require_once __DIR__ . '/../key/generate_keys.php';
+    exit;
+
 } catch (Throwable $e) {
     error_log('[auth/login] ' . $e->getMessage());
     http_response_code(500);
