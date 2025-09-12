@@ -257,68 +257,6 @@ function statusClass(int $tinyInt) {
     </div>
   </div>
 
-  <!-- 管理者だけ「編集」リンクを表示（トークン到着を待つ＋role.phpフォールバック） -->
-  <script>
-  const ROLE_URL = <?= json_encode($scriptDir . '/../top_api/role.php', JSON_UNESCAPED_SLASHES) ?>;
-
-  function showEditLink(asAdmin) {
-    const link = document.getElementById('AdminEditLink');
-    if (!link) return;
-    if (asAdmin) {
-      link.style.display = 'inline';
-      document.body.dataset.role = 'admin';
-    } else {
-      document.body.dataset.role = 'user';
-    }
-  }
-
-  async function refetchRoleOnce() {
-    try {
-      const t = sessionStorage.getItem('jwt') || sessionStorage.getItem('access_token') || '';
-      const res = await fetch(ROLE_URL, {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Accept':'application/json',
-          ...(t ? {'Authorization':'Bearer '+t} : {})
-        },
-        body:'{}',
-        credentials:'same-origin'
-      });
-      if (!res.ok) return null;
-      const j = await res.json();
-      if (j && j.ok === true && (j.role === 0 || j.role === 1 || j.role === '0' || j.role === '1')) {
-        return Number(j.role);
-      }
-    } catch {}
-    return null;
-  }
-
-  function tryToggleOnce(){
-    const role = readJwtRole(false);
-    if (role === 1) { showEditLink(true);  return true; }
-    if (role === 0) { showEditLink(false); return true; }
-    return false;
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    if (tryToggleOnce()) return;
-
-    let tries = 0;
-    const iv = setInterval(async () => {
-      tries++;
-      if (tryToggleOnce() || tries >= 60) {
-        clearInterval(iv);
-        if (document.body.dataset.role !== 'admin' && document.body.dataset.role !== 'user') {
-          const srvRole = await refetchRoleOnce();
-          if (srvRole === 1) showEditLink(true);
-          else if (srvRole === 0) showEditLink(false);
-        }
-      }
-    }, 200);
-  });
-  </script>
-
 <script>
 function getToken(){
   try { return sessionStorage.getItem('jwt') || sessionStorage.getItem('access_token') || ''; }
