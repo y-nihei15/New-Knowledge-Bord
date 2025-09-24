@@ -42,7 +42,8 @@ function require_auth(): array {
     }
     try {
         if (jwt_db_is_revoked_or_expired($pdo, $jti)) {
-            _auth_fail('invalid_token', 'Token is revoked or expired', 401, $realm);
+            header('Location: /source.php');
+            exit;
         }
     } catch (Throwable $e) {
         _auth_fail('invalid_token', 'Token validation failed', 401, $realm);
@@ -57,6 +58,14 @@ function require_auth(): array {
         'token'      => $jwt,
     ];
 }
+
+// ▼追加：JWTのexpだけ先に見てタイムアウト判定
+$parsed = jwt_parse($jwt);
+if ($parsed && isset($parsed['payload']['exp']) && time() >= (int)$parsed['payload']['exp']) {
+    header('Location: /source.php'); // ←遷移先
+    exit;
+}
+
 
 function _auth_fail(string $error, string $description, int $statusCode, string $realm): void {
     header(
